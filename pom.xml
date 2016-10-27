@@ -9,7 +9,7 @@
 	<packaging>jar</packaging>
 
 	<name>ole-solr-client</name>
-	<description>Demo project for Spring Boot</description>
+	<description>Solr Client project</description>
 
 	<parent>
 		<groupId>org.springframework.boot</groupId>
@@ -43,6 +43,13 @@
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+
+		<dependency>
+			<groupId>mysql</groupId>
+			<artifactId>mysql-connector-java</artifactId>
+			<version>6.0.5</version>
+		</dependency>
+
 	</dependencies>
 
 	<build>

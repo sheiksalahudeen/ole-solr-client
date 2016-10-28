@@ -1,4 +1,4 @@
-package org.kuali.ole.model;
+package org.kuali.ole.model.jpa;
 
 import javax.persistence.*;
 import java.io.Serializable;

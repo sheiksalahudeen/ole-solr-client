@@ -1,6 +1,6 @@
 package org.kuali.ole.repo;
 
-import org.kuali.ole.model.BibRecord;
+import org.kuali.ole.model.jpa.BibRecord;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 /**

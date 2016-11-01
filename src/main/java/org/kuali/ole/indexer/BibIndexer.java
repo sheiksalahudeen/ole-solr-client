@@ -43,7 +43,7 @@ public class BibIndexer extends OleDsNgIndexer {
     private static final String DYNAMIC_FIELD_PREFIX = "mdf_";
 
     private BibMarcRecordProcessor bibMarcRecordProcessor;
-    private DocumentSearchConfig documentSearchConfig;
+    private ConfigMaps configMaps;
 
     public List<SolrInputDocument> prepareSolrInputDocument(BibRecord bibRecord) {
         Map<String, SolrInputDocument> inputDocumentForBib = getInputDocumentForBib(bibRecord, null);
@@ -66,7 +66,7 @@ public class BibIndexer extends OleDsNgIndexer {
         List<SolrInputDocument> solrInputDocuments = getSolrInputDocumentListFromMap(inputDocumentForBib);
         commitDocumentToSolr(solrInputDocuments);
     }
-    
+
     @Override
     public void deleteDocument(String bibId) {
         deleteBibDocumentFromSolr(bibId);
@@ -120,6 +120,8 @@ public class BibIndexer extends OleDsNgIndexer {
     public SolrInputDocument buildSolrInputDocumentWithBibMarcRecord(BibMarcRecord record) {
         SolrInputDocument solrInputDocument = new SolrInputDocument();
 
+        solrInputDocument.addField(DOC_TYPE, DocType.BIB.getDescription());
+        solrInputDocument.addField(DOC_FORMAT, DocFormat.MARC.getDescription());
         solrInputDocument.addField(LEADER, record.getLeader());
 
         // Title Field Calculations.
@@ -129,10 +131,7 @@ public class BibIndexer extends OleDsNgIndexer {
             solrInputDocument.addField("controlfield_" + cf.getTag(), cf.getValue());
         }
 
-        solrInputDocument.addField(DOC_TYPE, DocType.BIB.getDescription());
-        solrInputDocument.addField(DOC_FORMAT, DocFormat.MARC.getDescription());
-
-        for (String field : getDocumentSearchConfig().FIELDS_TO_TAGS_2_INCLUDE_MAP.keySet()) {
+        for (String field : configMaps.FIELDS_TO_TAGS_2_INCLUDE_MAP.keySet()) {
             Object object = buildFieldValue(field, record);
             if(object != null){
                 addFieldToSolrDoc(record, field,object, solrInputDocument);
@@ -216,9 +215,9 @@ public class BibIndexer extends OleDsNgIndexer {
     public Object buildFieldValue(String fieldName, BibMarcRecord record) {
         List<ControlField> controlFieldList = record.getControlFields();
         List<DataField> dataFields = record.getDataFields();
-        String includeTags = getDocumentSearchConfig().FIELDS_TO_TAGS_2_INCLUDE_MAP.get(fieldName);
+        String includeTags = configMaps.FIELDS_TO_TAGS_2_INCLUDE_MAP.get(fieldName);
         if ((includeTags != null) && (includeTags.length() > 0)) {
-            String excludeTags = getDocumentSearchConfig().FIELDS_TO_TAGS_2_EXCLUDE_MAP.get(fieldName);
+            String excludeTags = configMaps.FIELDS_TO_TAGS_2_EXCLUDE_MAP.get(fieldName);
             if (excludeTags == null) {
                 excludeTags = "";
             }
@@ -300,7 +299,7 @@ public class BibIndexer extends OleDsNgIndexer {
         }  else if (fieldName.equals(CARRIER_DISPLAY) || fieldName.equals(CARRIER_SEARCH)) {
             return getRecordFormat_Carrier(record);
         } else if(fieldName.equals(DESCRIPTION_SEARCH)) {
-            String excludeTags = getDocumentSearchConfig().FIELDS_TO_TAGS_2_EXCLUDE_MAP.get(fieldName);
+            String excludeTags = configMaps.FIELDS_TO_TAGS_2_EXCLUDE_MAP.get(fieldName);
             if (excludeTags == null) {
                 excludeTags = "";
             }
@@ -804,7 +803,7 @@ public class BibIndexer extends OleDsNgIndexer {
 
     private int getSecondIndicator(BibMarcRecord record, String fieldName) {
         int ind2Value = 0;
-        String fieldTags = getDocumentSearchConfig().FIELDS_TO_TAGS_2_INCLUDE_MAP.get(fieldName);
+        String fieldTags = configMaps.FIELDS_TO_TAGS_2_INCLUDE_MAP.get(fieldName);
         String[] tagValueList = null;
         if (fieldTags != null) {
             tagValueList = fieldTags.split(",");
@@ -899,7 +898,7 @@ public class BibIndexer extends OleDsNgIndexer {
     }
 
     private void addGeneralFieldsToSolrDoc(BibMarcRecord record, SolrInputDocument solrDoc) {
-        String isbnDataFields = getDocumentSearchConfig().FIELDS_TO_TAGS_2_INCLUDE_MAP.get(ISBN_SEARCH);
+        String isbnDataFields = configMaps.FIELDS_TO_TAGS_2_INCLUDE_MAP.get(ISBN_SEARCH);
         for (DataField dataField : record.getDataFields()) {
             String tag = dataField.getTag();
             for (SubField subField : dataField.getSubFields()) {
@@ -934,14 +933,15 @@ public class BibIndexer extends OleDsNgIndexer {
         this.bibMarcRecordProcessor = bibMarcRecordProcessor;
     }
 
-    public DocumentSearchConfig getDocumentSearchConfig() {
-        if(null == documentSearchConfig) {
-            documentSearchConfig = DocumentSearchConfig.getDocumentSearchConfig();
+    public ConfigMaps getConfigMaps() {
+        if(null == configMaps) {
+            configMaps = new ConfigMaps();
         }
-        return documentSearchConfig;
+        return configMaps;
     }
 
-    public void setDocumentSearchConfig(DocumentSearchConfig documentSearchConfig) {
-        this.documentSearchConfig = documentSearchConfig;
+
+    public void setConfigMaps(ConfigMaps configMaps) {
+        this.configMaps = configMaps;
     }
 }

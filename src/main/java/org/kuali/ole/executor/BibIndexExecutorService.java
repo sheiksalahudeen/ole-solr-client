@@ -42,7 +42,7 @@ public class BibIndexExecutorService {
     private BibMarcRecordProcessor bibMarcRecordProcessor;
 
     public Integer indexDocument() {
-        DocumentSearchConfig.getDocumentSearchConfig();
+        DocumentSearchConfig documentSearchConfig = DocumentSearchConfig.getDocumentSearchConfig();
         Integer numThreads = 75;
         Integer docsPerThread = 1000;
         Integer commitIndexesInterval = 100000;
@@ -72,6 +72,7 @@ public class BibIndexExecutorService {
                 if (callableCountByCommitInterval == 0) {
                     callableCountByCommitInterval = 1;
                 }
+                callableCountByCommitInterval = 1000;
                 logger.info("Number of callables to execute to commit indexes : " + callableCountByCommitInterval);
 
                 StopWatch stopWatch = new StopWatch();
@@ -79,7 +80,10 @@ public class BibIndexExecutorService {
 
                 List<Callable<Integer>> callables = new ArrayList<>();
                 for (int pageNum = 0; pageNum < loopCount; pageNum++) {
-                    Callable callable = new BibIndexCallable(pageNum, docsPerThread,solrCore,  solrUrl, getBibMarcRecordProcessor());
+                    Callable callable = new BibIndexCallable(pageNum, docsPerThread,solrCore,  solrUrl,
+                            getBibMarcRecordProcessor(),
+                            documentSearchConfig.FIELDS_TO_TAGS_2_INCLUDE_MAP,
+                            documentSearchConfig.FIELDS_TO_TAGS_2_EXCLUDE_MAP);
                     callables.add(callable);
                 }
 

@@ -16,9 +16,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.util.StopWatch;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.*;
 
 /**
@@ -33,13 +31,20 @@ public class BibIndexCallable implements Callable {
     private String coreName;
     private String solrURL;
     private final BibMarcRecordProcessor bibMarcRecordProcessor;
+    private Map<String, String> fieldsToTags2IncludeMap = new HashMap<>();
+    private Map<String, String> fieldsToTags2ExcludeMap = new HashMap<>();
 
-    public BibIndexCallable(int pageNum, int docsPerPage, String coreName, String solrURL, BibMarcRecordProcessor bibMarcRecordProcessor) {
+    public BibIndexCallable(int pageNum, int docsPerPage, String coreName, String solrURL,
+                            BibMarcRecordProcessor bibMarcRecordProcessor,
+                            Map<String, String> fieldsToTags2IncludeMap,
+                            Map<String, String> fieldsToTags2ExcludeMap) {
         this.pageNum = pageNum;
         this.docsPerPage = docsPerPage;
         this.coreName = coreName;
         this.solrURL = solrURL;
         this.bibMarcRecordProcessor = bibMarcRecordProcessor;
+        this.fieldsToTags2IncludeMap.putAll(fieldsToTags2IncludeMap);
+        this.fieldsToTags2ExcludeMap.putAll(fieldsToTags2ExcludeMap);
     }
 
     @Override
@@ -50,14 +55,17 @@ public class BibIndexCallable implements Callable {
         Page<BibRecord> pageableBibRecords = HelperUtil.getRepository(BibRecordRepository.class).findAll(new PageRequest(pageNum, docsPerPage));
         mainStopWatch.stop();
         logger.info("Num Bibs Fetched : " + pageableBibRecords.getNumberOfElements() + "   and time taken to fetch : " + mainStopWatch.getTotalTimeSeconds() + " Secs");
-        mainStopWatch.start();
+
+        StopWatch processStopWatch = new StopWatch();
+        processStopWatch.start();
 
         ExecutorService executorService = Executors.newFixedThreadPool(100);
         List<Future> futures = new ArrayList<>();
 
         for (Iterator<BibRecord> iterator = pageableBibRecords.getContent().iterator(); iterator.hasNext(); ) {
             BibRecord bibRecord = iterator.next();
-            futures.add(executorService.submit(new BibRecordSetupCallable(bibRecord, bibMarcRecordProcessor)));
+            futures.add(executorService.submit(new BibRecordSetupCallable(bibRecord, bibMarcRecordProcessor,
+                    fieldsToTags2IncludeMap, fieldsToTags2ExcludeMap)));
         }
 
         Integer count = 0;
@@ -87,8 +95,9 @@ public class BibIndexCallable implements Callable {
         } else {
             message = "Empty solr input document for page : " + pageNum + "  docPerPage " + docsPerPage;
         }
-        mainStopWatch.stop();
-        logger.info(message + "   and time taken for process : " + mainStopWatch.getTotalTimeSeconds() + " Secs");
+
+        processStopWatch.stop();
+        logger.info(message + "    time taken for process : " + processStopWatch.getTotalTimeSeconds() + " Secs");
 
         return count;
     }

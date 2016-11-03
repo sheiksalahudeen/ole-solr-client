@@ -22,7 +22,7 @@ public class BibFetchBuilder {
             camelContext.addRoutes(new RouteBuilder() {
                 @Override
                 public void configure() throws Exception {
-                    from("activemq:queue:bibQ?asyncConsumer=true&concurrentConsumers=100")
+                    from("oleactivemq:queue:bibQ?asyncConsumer=true&concurrentConsumers=100")
                             .bean(BibProcessor.class,"processBib");
                 }
             });

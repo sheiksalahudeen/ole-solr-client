@@ -65,7 +65,7 @@ public class BibIndexCallable implements Callable {
         bibIndexingTxObject.setPageNum(pageNum);
         bibIndexingTxObject.setDocsPerPage(docsPerPage);
         bibIndexingTxObject.setBibMarcRecordProcessor(bibMarcRecordProcessor);
-        producerTemplate.sendBody("activemq:queue:bibQ", bibIndexingTxObject);
+        producerTemplate.sendBody("oleactivemq:queue:bibQ", bibIndexingTxObject);
 
         /*StopWatch processStopWatch = new StopWatch();
         processStopWatch.start();

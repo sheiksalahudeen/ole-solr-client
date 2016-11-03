@@ -4,6 +4,7 @@ import com.thoughtworks.xstream.XStream;
 import org.apache.log4j.Logger;
 import org.kuali.ole.common.marc.*;
 
+import java.io.Serializable;
 import java.util.*;
 
 /**
@@ -13,7 +14,7 @@ import java.util.*;
  * Time: 3:45 PM
  * To change this template use File | Settings | File Templates.
  */
-public class BibMarcRecordProcessor {
+public class BibMarcRecordProcessor implements Serializable {
 
     private static final Logger LOG = Logger.getLogger(BibMarcRecordProcessor.class);
 

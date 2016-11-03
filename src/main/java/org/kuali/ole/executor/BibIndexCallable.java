@@ -6,6 +6,7 @@ import org.apache.solr.client.solrj.response.UpdateResponse;
 import org.apache.solr.common.SolrInputDocument;
 import org.kuali.ole.common.marc.xstream.BibMarcRecordProcessor;
 import org.kuali.ole.indexer.BibIndexer;
+import org.kuali.ole.indexer.BibIndexingTxObject;
 import org.kuali.ole.model.jpa.BibRecord;
 import org.kuali.ole.repo.BibRecordRepository;
 import org.kuali.ole.service.SolrAdmin;
@@ -33,11 +34,12 @@ public class BibIndexCallable implements Callable {
     private final BibMarcRecordProcessor bibMarcRecordProcessor;
     private Map<String, String> fieldsToTags2IncludeMap = new HashMap<>();
     private Map<String, String> fieldsToTags2ExcludeMap = new HashMap<>();
+    private ProducerTemplate producerTemplate;
 
     public BibIndexCallable(int pageNum, int docsPerPage, String coreName, String solrURL,
                             BibMarcRecordProcessor bibMarcRecordProcessor,
                             Map<String, String> fieldsToTags2IncludeMap,
-                            Map<String, String> fieldsToTags2ExcludeMap) {
+                            Map<String, String> fieldsToTags2ExcludeMap, ProducerTemplate producerTemplate) {
         this.pageNum = pageNum;
         this.docsPerPage = docsPerPage;
         this.coreName = coreName;
@@ -45,18 +47,27 @@ public class BibIndexCallable implements Callable {
         this.bibMarcRecordProcessor = bibMarcRecordProcessor;
         this.fieldsToTags2IncludeMap.putAll(fieldsToTags2IncludeMap);
         this.fieldsToTags2ExcludeMap.putAll(fieldsToTags2ExcludeMap);
+        this.producerTemplate = producerTemplate;
     }
 
     @Override
     public Object call() throws Exception {
         StopWatch mainStopWatch = new StopWatch();
         mainStopWatch.start();
-        List<SolrInputDocument> solrInputDocuments = new ArrayList<>();
         Page<BibRecord> pageableBibRecords = HelperUtil.getRepository(BibRecordRepository.class).findAll(new PageRequest(pageNum, docsPerPage));
         mainStopWatch.stop();
-        logger.info("Num Bibs Fetched : " + pageableBibRecords.getNumberOfElements() + "   and time taken to fetch : " + mainStopWatch.getTotalTimeSeconds() + " Secs");
+        logger.info("Page Num : " + pageNum + "    Num Bibs Fetched : " + pageableBibRecords.getNumberOfElements() + "   and time taken to fetch : " + mainStopWatch.getTotalTimeSeconds() + " Secs");
 
-        StopWatch processStopWatch = new StopWatch();
+        BibIndexingTxObject bibIndexingTxObject = new BibIndexingTxObject();
+        bibIndexingTxObject.setBibRecords(pageableBibRecords.getContent());
+        bibIndexingTxObject.setFIELDS_TO_TAGS_2_INCLUDE_MAP(fieldsToTags2IncludeMap);
+        bibIndexingTxObject.setFIELDS_TO_TAGS_2_EXCLUDE_MAP(fieldsToTags2ExcludeMap);
+        bibIndexingTxObject.setPageNum(pageNum);
+        bibIndexingTxObject.setDocsPerPage(docsPerPage);
+        bibIndexingTxObject.setBibMarcRecordProcessor(bibMarcRecordProcessor);
+        producerTemplate.sendBody("activemq:queue:bibQ", bibIndexingTxObject);
+
+        /*StopWatch processStopWatch = new StopWatch();
         processStopWatch.start();
 
         ExecutorService executorService = Executors.newFixedThreadPool(100);
@@ -97,8 +108,8 @@ public class BibIndexCallable implements Callable {
         }
 
         processStopWatch.stop();
-        logger.info(message + "    time taken for process : " + processStopWatch.getTotalTimeSeconds() + " Secs");
+        logger.info(message + "    time taken for process : " + processStopWatch.getTotalTimeSeconds() + " Secs");*/
 
-        return count;
+        return 0;
     }
 }

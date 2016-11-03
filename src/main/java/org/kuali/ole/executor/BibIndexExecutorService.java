@@ -1,6 +1,7 @@
 package org.kuali.ole.executor;
 
 import com.google.common.collect.Lists;
+import org.apache.camel.ProducerTemplate;
 import org.apache.camel.component.seda.SedaEndpoint;
 import org.apache.camel.component.solr.SolrConstants;
 import org.apache.commons.lang3.StringUtils;
@@ -39,6 +40,10 @@ public class BibIndexExecutorService {
 
     @Autowired
     BibRecordRepository bibRecordRepository;
+
+    @Autowired
+    ProducerTemplate producerTemplate;
+
     private BibMarcRecordProcessor bibMarcRecordProcessor;
 
     public Integer indexDocument() {
@@ -83,7 +88,8 @@ public class BibIndexExecutorService {
                     Callable callable = new BibIndexCallable(pageNum, docsPerThread,solrCore,  solrUrl,
                             getBibMarcRecordProcessor(),
                             documentSearchConfig.FIELDS_TO_TAGS_2_INCLUDE_MAP,
-                            documentSearchConfig.FIELDS_TO_TAGS_2_EXCLUDE_MAP);
+                            documentSearchConfig.FIELDS_TO_TAGS_2_EXCLUDE_MAP,
+                            producerTemplate);
                     callables.add(callable);
                 }
 

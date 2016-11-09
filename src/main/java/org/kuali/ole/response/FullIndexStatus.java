@@ -18,6 +18,9 @@ public class FullIndexStatus {
     private int numberOfItemsFetched;
     private int numberOfItemsProcessed;
     private boolean running;
+    private Integer noOfDbThreads;
+    private Integer noOfBibProcessThreads;
+    private Integer docsPerThread;
 
     private static FullIndexStatus ourInstance = new FullIndexStatus();
 
@@ -114,6 +117,30 @@ public class FullIndexStatus {
 
     public void setNumberOfItemsProcessed(int numberOfItemsProcessed) {
         this.numberOfItemsProcessed = numberOfItemsProcessed;
+    }
+
+    public Integer getNoOfDbThreads() {
+        return noOfDbThreads;
+    }
+
+    public void setNoOfDbThreads(Integer noOfDbThreads) {
+        this.noOfDbThreads = noOfDbThreads;
+    }
+
+    public Integer getNoOfBibProcessThreads() {
+        return noOfBibProcessThreads;
+    }
+
+    public void setNoOfBibProcessThreads(Integer noOfBibProcessThreads) {
+        this.noOfBibProcessThreads = noOfBibProcessThreads;
+    }
+
+    public Integer getDocsPerThread() {
+        return docsPerThread;
+    }
+
+    public void setDocsPerThread(Integer docsPerThread) {
+        this.docsPerThread = docsPerThread;
     }
 
     public void addBibFetched(int size) {

@@ -60,6 +60,9 @@ public class MainController {
     public FullIndexStatus fullIndex(@RequestBody FullIndexRequest fullIndexRequest) {
         fullIndexRequest = initiateFullIndexRequest(fullIndexRequest);
         this.fullIndexStatus.resetStatus();
+        this.fullIndexStatus.setNoOfDbThreads(fullIndexRequest.getNoOfDbThreads());
+        this.fullIndexStatus.setDocsPerThread(fullIndexRequest.getDocsPerThread());
+        this.fullIndexStatus.setNoOfBibProcessThreads(fullIndexRequest.getNoOfBibProcessThreads());
         bibIndexExecutorService.indexDocument(fullIndexRequest);
         return this.fullIndexStatus;
     }

@@ -2,13 +2,11 @@ package org.kuali.ole.executor;
 
 import com.google.common.collect.Lists;
 import org.apache.camel.ProducerTemplate;
-import org.apache.camel.component.seda.SedaEndpoint;
-import org.apache.camel.component.solr.SolrConstants;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.kuali.ole.common.DocumentSearchConfig;
 import org.kuali.ole.common.marc.xstream.BibMarcRecordProcessor;
 import org.kuali.ole.repo.BibRecordRepository;
+import org.kuali.ole.request.FullIndexRequest;
 import org.kuali.ole.service.SolrAdmin;
 import org.kuali.ole.util.HelperUtil;
 import org.kuali.ole.util.SolrCommitScheduler;
@@ -16,7 +14,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Service;
 import org.springframework.util.StopWatch;
 
 import java.io.IOException;
@@ -28,7 +27,7 @@ import java.util.concurrent.*;
 /**
  * Created by sheiks on 28/10/16.
  */
-@Component
+@Service
 public class BibIndexExecutorService {
     Logger logger = LoggerFactory.getLogger(BibIndexExecutorService.class);
 
@@ -46,25 +45,26 @@ public class BibIndexExecutorService {
 
     private BibMarcRecordProcessor bibMarcRecordProcessor;
 
-    public Integer indexDocument() {
+    @Async
+    public Integer indexDocument(FullIndexRequest fullIndexRequest) {
         DocumentSearchConfig documentSearchConfig = DocumentSearchConfig.getDocumentSearchConfig();
-        Integer numThreads = 75;
-        Integer docsPerThread = 1000;
+        Integer numThreads = fullIndexRequest.getNoOfDbThreads();
+        Integer docsPerThread = fullIndexRequest.getDocsPerThread();
         Integer commitIndexesInterval = 100000;
-
 
         StopWatch mainStopWatch = new StopWatch();
         mainStopWatch.start();
 
         Integer totalBibsProcessed = 0;
+        SolrCommitScheduler solrCommitScheduler = null;
 
         try {
-            ExecutorService executorService = Executors.newFixedThreadPool(numThreads);
+            ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(numThreads);
 
             Integer totalDocCount = ((Long)bibRecordRepository.count()).intValue();
             logger.info("Total Document Count From DB : " + totalDocCount);
 
-            new SolrCommitScheduler(); // Todo : Need to find proper place to trigger.
+            solrCommitScheduler = new SolrCommitScheduler();// Todo : Need to find proper place to trigger.
 
             if (totalDocCount > 0) {
                 int quotient = totalDocCount / (docsPerThread);
@@ -77,7 +77,7 @@ public class BibIndexExecutorService {
                 if (callableCountByCommitInterval == 0) {
                     callableCountByCommitInterval = 1;
                 }
-                callableCountByCommitInterval = 1000;
+                callableCountByCommitInterval = 10;
                 logger.info("Number of callables to execute to commit indexes : " + callableCountByCommitInterval);
 
                 StopWatch stopWatch = new StopWatch();
@@ -89,14 +89,14 @@ public class BibIndexExecutorService {
                             getBibMarcRecordProcessor(),
                             documentSearchConfig.FIELDS_TO_TAGS_2_INCLUDE_MAP,
                             documentSearchConfig.FIELDS_TO_TAGS_2_EXCLUDE_MAP,
-                            producerTemplate);
+                            producerTemplate, fullIndexRequest.getNoOfBibProcessThreads());
                     callables.add(callable);
                 }
 
                 int futureCount = 0;
                 List<List<Callable<Integer>>> partitions = Lists.partition(new ArrayList<Callable<Integer>>(callables), callableCountByCommitInterval);
                 for (List<Callable<Integer>> partitionCallables : partitions) {
-                    List<Future<Integer>> futures = executorService.invokeAll(partitionCallables);
+                    List<Future<Integer>> futures = threadPoolExecutor.invokeAll(partitionCallables);
                     futures
                             .stream()
                             .map(future -> {
@@ -106,8 +106,6 @@ public class BibIndexExecutorService {
                                     throw new IllegalStateException(e);
                                 }
                             });
-                    logger.info("No of Futures Added : " + futures.size());
-
                     int numOfBibsProcessed = 0;
                     for (Iterator<Future<Integer>> iterator = futures.iterator(); iterator.hasNext(); ) {
                         Future future = iterator.next();
@@ -141,7 +139,7 @@ public class BibIndexExecutorService {
                 logger.info("Total futures executed: " + futureCount);
                 stopWatch.stop();
                 logger.info("Time taken to fetch " + totalBibsProcessed + " Bib Records and index to core " + solrCore + " : " + stopWatch.getTotalTimeSeconds() + " seconds");
-                executorService.shutdown();
+                threadPoolExecutor.shutdown();
 
                 //Final commit
 //                producerTemplate.asyncRequestBodyAndHeader(solrRouterURI + "://" + solrUri + "/" + solrCore, "", SolrConstants.OPERATION, SolrConstants.OPERATION_COMMIT);

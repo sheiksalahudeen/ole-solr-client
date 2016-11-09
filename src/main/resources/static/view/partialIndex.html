@@ -1,0 +1,26 @@
+<div class="panel-group" data-allow-multiple="true" role="tablist"
+     aria-multiselectable="true">
+    <div class="panel panel-primary">
+        <div class="panel-heading" role="tab">
+            <h1 class="panel-title">
+            <span style="cursor:pointer" data-toggle="collapse" data-target="#fullIndexPanel" ng-click="collapsed = !collapsed">
+                <span class="glyphicon" ng-class="{'glyphicon-chevron-right': !collapsed, 'glyphicon-chevron-down': collapsed}"></span>
+                    Partial Index
+            </span>
+            </h1>
+        </div>
+        <div id="fullIndexPanel" class="panel-collapse collapse" role="tabpanel">
+            <div class="panel-body">
+                Partial Index Sections
+            </div>
+        </div>
+    </div>
+
+    <div>
+        <modal id="messageDialogId" title="{{title}}" visible="showDialog">
+            <div>
+                <span id="message">{{message}}</span>
+            </div>
+        </modal>
+    </div>
+</div>

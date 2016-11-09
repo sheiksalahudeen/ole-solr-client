@@ -14,12 +14,19 @@ import java.util.TimerTask;
 public class SolrCommitScheduler {
 
     Logger logger = LoggerFactory.getLogger(BibIndexCallable.class);
+    Timer timer = new Timer();
+
 
     public SolrCommitScheduler() {
         logger.info("Scheduler Triggered");
-        Timer timer = new Timer();
         timer.schedule(new CommitSolr(), 0, 300000);
     }
+
+    public void stopScheduler(){
+        this.timer.cancel();
+        this.timer.purge();
+    }
+
 
     class CommitSolr extends TimerTask {
         public void run() {

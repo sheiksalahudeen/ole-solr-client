@@ -1,6 +1,7 @@
 package org.kuali.ole.camel.processor;
 
 import org.apache.camel.Exchange;
+import org.apache.camel.ProducerTemplate;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.solr.client.solrj.response.UpdateResponse;
 import org.apache.solr.common.SolrInputDocument;
@@ -8,6 +9,7 @@ import org.kuali.ole.executor.BibIndexCallable;
 import org.kuali.ole.executor.BibRecordSetupCallable;
 import org.kuali.ole.indexer.BibIndexingTxObject;
 import org.kuali.ole.model.jpa.BibRecord;
+import org.kuali.ole.response.FullIndexStatus;
 import org.kuali.ole.service.SolrAdmin;
 import org.kuali.ole.util.HelperUtil;
 import org.slf4j.Logger;
@@ -36,7 +38,7 @@ public class BibProcessor {
         StopWatch processStopWatch = new StopWatch();
         processStopWatch.start();
 
-        ExecutorService executorService = Executors.newFixedThreadPool(100);
+        ExecutorService executorService = Executors.newFixedThreadPool(bibIndexingTxObject.getNoOfBibProcessThreads());
         List<Future> futures = new ArrayList<>();
 
         for (Iterator<BibRecord> iterator = bibRecords.iterator(); iterator.hasNext(); ) {
@@ -69,6 +71,8 @@ public class BibProcessor {
             SolrAdmin solrAdmin = HelperUtil.getBean(SolrAdmin.class);
             UpdateResponse updateResponse = solrAdmin.indexToSolr(solrInputDocuments, false);
             message = "Total solr input document for page : " + bibIndexingTxObject.getPageNum() + "  docPerPage " + bibIndexingTxObject.getDocsPerPage() + "  = " + count;
+            ProducerTemplate producerTemplate = HelperUtil.getBean(ProducerTemplate.class);
+            producerTemplate.sendBody("oleactivemq:queue:bibProcessedQ", count);
         } else {
             message = "Empty solr input document for page : " + bibIndexingTxObject.getPageNum() + "  docPerPage " + bibIndexingTxObject.getDocsPerPage();
         }
@@ -76,5 +80,15 @@ public class BibProcessor {
         processStopWatch.stop();
         logger.info(message + "    time taken for process : " + processStopWatch.getTotalTimeSeconds() + " Secs");
 
+    }
+
+    public void updateBibFetchCount(int count){
+        FullIndexStatus instance = FullIndexStatus.getInstance();
+        instance.addBibFetched(count);
+    }
+
+    public void updateBibProcessedCount(int count){
+        FullIndexStatus instance = FullIndexStatus.getInstance();
+        instance.addBibProcessed(count);
     }
 }

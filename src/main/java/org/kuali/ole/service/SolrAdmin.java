@@ -11,7 +11,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StopWatch;
 
 import java.io.File;
 import java.io.IOException;
@@ -181,8 +183,14 @@ public class SolrAdmin {
         return updateResponse;
     }
 
+    @Async
     public UpdateResponse commit() throws IOException, SolrServerException {
-        return solrClient.commit();
+        StopWatch stopWatch = new StopWatch();
+        stopWatch.start();
+        UpdateResponse commit = solrClient.commit();
+        stopWatch.stop();
+        logger.info("Time take to commit to solr : " + stopWatch.getTotalTimeSeconds() + " Secs");
+        return commit;
     }
 
 }

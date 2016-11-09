@@ -4,6 +4,7 @@ import org.kuali.ole.common.marc.xstream.BibMarcRecordProcessor;
 import org.kuali.ole.model.jpa.BibRecord;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,8 +19,12 @@ public class BibIndexingTxObject implements Serializable {
     private BibMarcRecordProcessor bibMarcRecordProcessor;
     private int pageNum;
     private int docsPerPage;
+    private int noOfBibProcessThreads;
 
     public List<BibRecord> getBibRecords() {
+        if(null == bibRecords) {
+            bibRecords = new ArrayList<>();
+        }
         return bibRecords;
     }
 
@@ -64,8 +69,14 @@ public class BibIndexingTxObject implements Serializable {
     }
 
     public void setBibMarcRecordProcessor(BibMarcRecordProcessor bibMarcRecordProcessor) {
-
-
         this.bibMarcRecordProcessor = bibMarcRecordProcessor;
+    }
+
+    public int getNoOfBibProcessThreads() {
+        return noOfBibProcessThreads;
+    }
+
+    public void setNoOfBibProcessThreads(int noOfBibProcessThreads) {
+        this.noOfBibProcessThreads = noOfBibProcessThreads;
     }
 }

@@ -7,6 +7,7 @@ import org.kuali.ole.common.DocumentSearchConfig;
 import org.kuali.ole.common.marc.xstream.BibMarcRecordProcessor;
 import org.kuali.ole.repo.BibRecordRepository;
 import org.kuali.ole.request.FullIndexRequest;
+import org.kuali.ole.response.FullIndexStatus;
 import org.kuali.ole.service.SolrAdmin;
 import org.kuali.ole.util.HelperUtil;
 import org.kuali.ole.util.SolrCommitScheduler;
@@ -20,6 +21,7 @@ import org.springframework.util.StopWatch;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.*;
@@ -148,6 +150,13 @@ public class BibIndexExecutorService {
             }
         } catch (Exception e) {
             e.printStackTrace();
+        } finally {
+            FullIndexStatus instance = FullIndexStatus.getInstance();
+            instance.setEndTime(new Date());
+            /*
+            if(null != solrCommitScheduler) {
+                solrCommitScheduler.stopScheduler();
+            }*/
         }
         mainStopWatch.stop();
         try {

@@ -77,7 +77,7 @@ public class BibIndexExecutorService {
                 if (callableCountByCommitInterval == 0) {
                     callableCountByCommitInterval = 1;
                 }
-                callableCountByCommitInterval = 10;
+                callableCountByCommitInterval = 1000;
                 logger.info("Number of callables to execute to commit indexes : " + callableCountByCommitInterval);
 
                 StopWatch stopWatch = new StopWatch();

@@ -15,7 +15,7 @@ public class HoldingsRecord implements Serializable {
 
     @Id
     @Column(name="HOLDINGS_ID")
-    private int holdingsId;
+    private Integer holdingsId;
 
     @Column(name="ACCESS_PASSWORD")
     private String accessPassword;
@@ -43,7 +43,7 @@ public class HoldingsRecord implements Serializable {
     private String allowIll;
 
     @Column(name="AUTHENTICATION_TYPE_ID")
-    private int authenticationTypeId;
+    private Integer authenticationTypeId;
 
     @Column(name="CALL_NUMBER")
     private String callNumber;
@@ -52,7 +52,7 @@ public class HoldingsRecord implements Serializable {
     private String callNumberPrefix;
 
     @Column(name="CALL_NUMBER_TYPE_ID")
-    private int callNumberTypeId;
+    private Integer callNumberTypeId;
 
     @Column(name="CANCELLATION_CANDIDATE")
     private String cancellationCandidate;
@@ -100,7 +100,7 @@ public class HoldingsRecord implements Serializable {
     private String formerHoldingsId;
 
     @Column(name="GOKB_IDENTIFIER")
-    private int gokbIdentifier;
+    private Integer gokbIdentifier;
 
     @Column(name="HOLDINGS_TYPE")
     private String holdingsType;
@@ -117,7 +117,7 @@ public class HoldingsRecord implements Serializable {
     private String location;
 
     @Column(name="LOCATION_ID")
-    private int locationId;
+    private Integer locationId;
 
     @Column(name="LOCATION_LEVEL")
     private String locationLevel;
@@ -126,7 +126,7 @@ public class HoldingsRecord implements Serializable {
     private String materialsSpecified;
 
     @Column(name="NUMBER_SIMULT_USERS")
-    private int numberSimultUsers;
+    private Integer numberSimultUsers;
 
     private String platform;
 
@@ -136,7 +136,7 @@ public class HoldingsRecord implements Serializable {
     private String publisher;
 
     @Column(name="RECEIPT_STATUS_ID")
-    private int receiptStatusId;
+    private Integer receiptStatusId;
 
     @Column(name="SECOND_INDICATOR")
     private String secondIndicator;
@@ -168,11 +168,11 @@ public class HoldingsRecord implements Serializable {
     public HoldingsRecord() {
     }
 
-    public int getHoldingsId() {
+    public Integer getHoldingsId() {
         return this.holdingsId;
     }
 
-    public void setHoldingsId(int holdingsId) {
+    public void setHoldingsId(Integer holdingsId) {
         this.holdingsId = holdingsId;
     }
 
@@ -240,11 +240,11 @@ public class HoldingsRecord implements Serializable {
         this.allowIll = allowIll;
     }
 
-    public int getAuthenticationTypeId() {
+    public Integer getAuthenticationTypeId() {
         return this.authenticationTypeId;
     }
 
-    public void setAuthenticationTypeId(int authenticationTypeId) {
+    public void setAuthenticationTypeId(Integer authenticationTypeId) {
         this.authenticationTypeId = authenticationTypeId;
     }
 
@@ -264,11 +264,11 @@ public class HoldingsRecord implements Serializable {
         this.callNumberPrefix = callNumberPrefix;
     }
 
-    public int getCallNumberTypeId() {
+    public Integer getCallNumberTypeId() {
         return this.callNumberTypeId;
     }
 
-    public void setCallNumberTypeId(int callNumberTypeId) {
+    public void setCallNumberTypeId(Integer callNumberTypeId) {
         this.callNumberTypeId = callNumberTypeId;
     }
 
@@ -376,11 +376,11 @@ public class HoldingsRecord implements Serializable {
         this.formerHoldingsId = formerHoldingsId;
     }
 
-    public int getGokbIdentifier() {
+    public Integer getGokbIdentifier() {
         return this.gokbIdentifier;
     }
 
-    public void setGokbIdentifier(int gokbIdentifier) {
+    public void setGokbIdentifier(Integer gokbIdentifier) {
         this.gokbIdentifier = gokbIdentifier;
     }
 
@@ -424,11 +424,11 @@ public class HoldingsRecord implements Serializable {
         this.location = location;
     }
 
-    public int getLocationId() {
+    public Integer getLocationId() {
         return this.locationId;
     }
 
-    public void setLocationId(int locationId) {
+    public void setLocationId(Integer locationId) {
         this.locationId = locationId;
     }
 
@@ -448,11 +448,11 @@ public class HoldingsRecord implements Serializable {
         this.materialsSpecified = materialsSpecified;
     }
 
-    public int getNumberSimultUsers() {
+    public Integer getNumberSimultUsers() {
         return this.numberSimultUsers;
     }
 
-    public void setNumberSimultUsers(int numberSimultUsers) {
+    public void setNumberSimultUsers(Integer numberSimultUsers) {
         this.numberSimultUsers = numberSimultUsers;
     }
 
@@ -480,11 +480,11 @@ public class HoldingsRecord implements Serializable {
         this.publisher = publisher;
     }
 
-    public int getReceiptStatusId() {
+    public Integer getReceiptStatusId() {
         return this.receiptStatusId;
     }
 
-    public void setReceiptStatusId(int receiptStatusId) {
+    public void setReceiptStatusId(Integer receiptStatusId) {
         this.receiptStatusId = receiptStatusId;
     }
 

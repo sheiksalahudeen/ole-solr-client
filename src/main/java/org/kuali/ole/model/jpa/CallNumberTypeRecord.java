@@ -7,8 +7,7 @@ import java.util.Date;
 
 
 /**
- * The persistent class for the ole_cat_shvlg_schm_t database table.
- * 
+ * Created by sheiks 10/11/16.
  */
 @Entity
 @Table(name="ole_cat_shvlg_schm_t")

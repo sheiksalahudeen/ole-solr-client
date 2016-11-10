@@ -1,15 +1,19 @@
 package org.kuali.ole.model.jpa;
 
-import javax.persistence.*;
+import org.kuali.ole.model.jpa.*;
+
 import java.io.Serializable;
+import javax.persistence.*;
 import java.util.Date;
+import java.util.List;
+
 
 /**
  * Created by sheiks on 27/10/16.
  */
 @Entity
 @Table(name="ole_ds_holdings_t")
-@NamedQuery(name="HoldingsRecord.findAll", query="SELECT h FROM HoldingsRecord h")
+@NamedQuery(name="HoldingsRecord.findAll", query="SELECT o FROM HoldingsRecord o")
 public class HoldingsRecord implements Serializable {
     private static final long serialVersionUID = 1L;
 
@@ -160,10 +164,46 @@ public class HoldingsRecord implements Serializable {
     @Column(name="UPDATED_BY")
     private String updatedBy;
 
+    //bi-directional many-to-one association to HoldingsAccessLocation
+    @OneToMany(mappedBy="holdingsRecord")
+    private List<HoldingsAccessLocation> holdingsAccessLocations;
+
+    //bi-directional many-to-one association to ExtentOfOwnerShipRecord
+    @OneToMany(mappedBy="holdingsRecord")
+    private List<ExtentOfOwnerShipRecord> extentOfOwnerShipRecords;
+
+    //bi-directional many-to-one association to EInstanceCoverageRecord
+    @OneToMany(mappedBy="holdingsRecord")
+    private List<EInstanceCoverageRecord> EInstanceCoverageRecords;
+
+    //bi-directional many-to-one association to OLEHoldingsDonorRecord
+    @OneToMany(mappedBy="holdingsRecord")
+    private List<OLEHoldingsDonorRecord> OLEHoldingsDonorRecords;
+
+    //bi-directional many-to-one association to HoldingsNoteRecord
+    @OneToMany(mappedBy="holdingsRecord")
+    private List<HoldingsNoteRecord> holdingsNoteRecords;
+
+    //bi-directional many-to-one association to HoldingsStatisticalSearchRecord
+    @OneToMany(mappedBy="holdingsRecord")
+    private List<HoldingsStatisticalSearchRecord> holdingsStatisticalSearchRecords;
+
     //bi-directional many-to-one association to BibRecord
     @ManyToOne
     @JoinColumn(name="BIB_ID")
-    private BibRecord oleDsBibT;
+    private BibRecord bibRecord;
+
+    //bi-directional many-to-one association to HoldingsUriRecord
+    @OneToMany(mappedBy="holdingsRecord")
+    private List<HoldingsUriRecord> holdingsUriRecords;
+
+    //bi-directional many-to-one association to ItemRecord
+    @OneToMany(mappedBy="holdingsRecord")
+    private List<ItemRecord> itemRecords;
+
+    //bi-directional many-to-one association to EInstancePerpetualAccessRecord
+    @OneToMany(mappedBy="holdingsRecord")
+    private List<EInstancePerpetualAccessRecord> EInstancePerpetualAccessRecords;
 
     public HoldingsRecord() {
     }
@@ -544,12 +584,210 @@ public class HoldingsRecord implements Serializable {
         this.updatedBy = updatedBy;
     }
 
-    public BibRecord getOleDsBibT() {
-        return this.oleDsBibT;
+    public List<HoldingsAccessLocation> getHoldingsAccessLocations() {
+        return this.holdingsAccessLocations;
     }
 
-    public void setOleDsBibT(BibRecord oleDsBibT) {
-        this.oleDsBibT = oleDsBibT;
+    public void setHoldingsAccessLocations(List<HoldingsAccessLocation> holdingsAccessLocations) {
+        this.holdingsAccessLocations = holdingsAccessLocations;
+    }
+
+    public HoldingsAccessLocation addHoldingsAccessLocation(HoldingsAccessLocation holdingsAccessLocation) {
+        getHoldingsAccessLocations().add(holdingsAccessLocation);
+        holdingsAccessLocation.setHoldingsRecord(this);
+
+        return holdingsAccessLocation;
+    }
+
+    public HoldingsAccessLocation removeHoldingsAccessLocation(HoldingsAccessLocation holdingsAccessLocation) {
+        getHoldingsAccessLocations().remove(holdingsAccessLocation);
+        holdingsAccessLocation.setHoldingsRecord(null);
+
+        return holdingsAccessLocation;
+    }
+
+    public List<ExtentOfOwnerShipRecord> getExtentOfOwnerShipRecords() {
+        return this.extentOfOwnerShipRecords;
+    }
+
+    public void setExtentOfOwnerShipRecords(List<ExtentOfOwnerShipRecord> extentOfOwnerShipRecords) {
+        this.extentOfOwnerShipRecords = extentOfOwnerShipRecords;
+    }
+
+    public ExtentOfOwnerShipRecord addExtentOfOwnerShipRecord(ExtentOfOwnerShipRecord extentOfOwnerShipRecord) {
+        getExtentOfOwnerShipRecords().add(extentOfOwnerShipRecord);
+        extentOfOwnerShipRecord.setHoldingsRecord(this);
+
+        return extentOfOwnerShipRecord;
+    }
+
+    public ExtentOfOwnerShipRecord removeExtentOfOwnerShipRecord(ExtentOfOwnerShipRecord extentOfOwnerShipRecord) {
+        getExtentOfOwnerShipRecords().remove(extentOfOwnerShipRecord);
+        extentOfOwnerShipRecord.setHoldingsRecord(null);
+
+        return extentOfOwnerShipRecord;
+    }
+
+    public List<EInstanceCoverageRecord> getEInstanceCoverageRecords() {
+        return this.EInstanceCoverageRecords;
+    }
+
+    public void setEInstanceCoverageRecords(List<EInstanceCoverageRecord> EInstanceCoverageRecords) {
+        this.EInstanceCoverageRecords = EInstanceCoverageRecords;
+    }
+
+    public EInstanceCoverageRecord addEInstanceCoverageRecord(EInstanceCoverageRecord EInstanceCoverageRecord) {
+        getEInstanceCoverageRecords().add(EInstanceCoverageRecord);
+        EInstanceCoverageRecord.setHoldingsRecord(this);
+
+        return EInstanceCoverageRecord;
+    }
+
+    public EInstanceCoverageRecord removeEInstanceCoverageRecord(EInstanceCoverageRecord EInstanceCoverageRecord) {
+        getEInstanceCoverageRecords().remove(EInstanceCoverageRecord);
+        EInstanceCoverageRecord.setHoldingsRecord(null);
+
+        return EInstanceCoverageRecord;
+    }
+
+    public List<OLEHoldingsDonorRecord> getOLEHoldingsDonorRecords() {
+        return this.OLEHoldingsDonorRecords;
+    }
+
+    public void setOLEHoldingsDonorRecords(List<OLEHoldingsDonorRecord> OLEHoldingsDonorRecords) {
+        this.OLEHoldingsDonorRecords = OLEHoldingsDonorRecords;
+    }
+
+    public OLEHoldingsDonorRecord addOLEHoldingsDonorRecord(OLEHoldingsDonorRecord OLEHoldingsDonorRecord) {
+        getOLEHoldingsDonorRecords().add(OLEHoldingsDonorRecord);
+        OLEHoldingsDonorRecord.setHoldingsRecord(this);
+
+        return OLEHoldingsDonorRecord;
+    }
+
+    public OLEHoldingsDonorRecord removeOLEHoldingsDonorRecord(OLEHoldingsDonorRecord OLEHoldingsDonorRecord) {
+        getOLEHoldingsDonorRecords().remove(OLEHoldingsDonorRecord);
+        OLEHoldingsDonorRecord.setHoldingsRecord(null);
+
+        return OLEHoldingsDonorRecord;
+    }
+
+    public List<HoldingsNoteRecord> getHoldingsNoteRecords() {
+        return this.holdingsNoteRecords;
+    }
+
+    public void setHoldingsNoteRecords(List<HoldingsNoteRecord> holdingsNoteRecords) {
+        this.holdingsNoteRecords = holdingsNoteRecords;
+    }
+
+    public HoldingsNoteRecord addHoldingsNoteRecord(HoldingsNoteRecord holdingsNoteRecord) {
+        getHoldingsNoteRecords().add(holdingsNoteRecord);
+        holdingsNoteRecord.setHoldingsRecord(this);
+
+        return holdingsNoteRecord;
+    }
+
+    public HoldingsNoteRecord removeHoldingsNoteRecord(HoldingsNoteRecord holdingsNoteRecord) {
+        getHoldingsNoteRecords().remove(holdingsNoteRecord);
+        holdingsNoteRecord.setHoldingsRecord(null);
+
+        return holdingsNoteRecord;
+    }
+
+    public List<HoldingsStatisticalSearchRecord> getHoldingsStatisticalSearchRecords() {
+        return this.holdingsStatisticalSearchRecords;
+    }
+
+    public void setHoldingsStatisticalSearchRecords(List<HoldingsStatisticalSearchRecord> holdingsStatisticalSearchRecords) {
+        this.holdingsStatisticalSearchRecords = holdingsStatisticalSearchRecords;
+    }
+
+    public HoldingsStatisticalSearchRecord addHoldingsStatisticalSearchRecord(HoldingsStatisticalSearchRecord holdingsStatisticalSearchRecord) {
+        getHoldingsStatisticalSearchRecords().add(holdingsStatisticalSearchRecord);
+        holdingsStatisticalSearchRecord.setHoldingsRecord(this);
+
+        return holdingsStatisticalSearchRecord;
+    }
+
+    public HoldingsStatisticalSearchRecord removeHoldingsStatisticalSearchRecord(HoldingsStatisticalSearchRecord holdingsStatisticalSearchRecord) {
+        getHoldingsStatisticalSearchRecords().remove(holdingsStatisticalSearchRecord);
+        holdingsStatisticalSearchRecord.setHoldingsRecord(null);
+
+        return holdingsStatisticalSearchRecord;
+    }
+
+    public BibRecord getBibRecord() {
+        return this.bibRecord;
+    }
+
+    public void setBibRecord(BibRecord bibRecord) {
+        this.bibRecord = bibRecord;
+    }
+
+    public List<HoldingsUriRecord> getHoldingsUriRecords() {
+        return this.holdingsUriRecords;
+    }
+
+    public void setHoldingsUriRecords(List<HoldingsUriRecord> holdingsUriRecords) {
+        this.holdingsUriRecords = holdingsUriRecords;
+    }
+
+    public HoldingsUriRecord addHoldingsUriRecord(HoldingsUriRecord holdingsUriRecord) {
+        getHoldingsUriRecords().add(holdingsUriRecord);
+        holdingsUriRecord.setHoldingsRecord(this);
+
+        return holdingsUriRecord;
+    }
+
+    public HoldingsUriRecord removeHoldingsUriRecord(HoldingsUriRecord holdingsUriRecord) {
+        getHoldingsUriRecords().remove(holdingsUriRecord);
+        holdingsUriRecord.setHoldingsRecord(null);
+
+        return holdingsUriRecord;
+    }
+
+    public List<ItemRecord> getItemRecords() {
+        return this.itemRecords;
+    }
+
+    public void setItemRecords(List<ItemRecord> itemRecords) {
+        this.itemRecords = itemRecords;
+    }
+
+    public ItemRecord addItemRecord(ItemRecord itemRecord) {
+        getItemRecords().add(itemRecord);
+        itemRecord.setHoldingsRecord(this);
+
+        return itemRecord;
+    }
+
+    public ItemRecord removeItemRecord(ItemRecord itemRecord) {
+        getItemRecords().remove(itemRecord);
+        itemRecord.setHoldingsRecord(null);
+
+        return itemRecord;
+    }
+
+    public List<EInstancePerpetualAccessRecord> getEInstancePerpetualAccessRecords() {
+        return this.EInstancePerpetualAccessRecords;
+    }
+
+    public void setEInstancePerpetualAccessRecords(List<EInstancePerpetualAccessRecord> EInstancePerpetualAccessRecords) {
+        this.EInstancePerpetualAccessRecords = EInstancePerpetualAccessRecords;
+    }
+
+    public EInstancePerpetualAccessRecord addEInstancePerpetualAccessRecord(EInstancePerpetualAccessRecord EInstancePerpetualAccessRecord) {
+        getEInstancePerpetualAccessRecords().add(EInstancePerpetualAccessRecord);
+        EInstancePerpetualAccessRecord.setHoldingsRecord(this);
+
+        return EInstancePerpetualAccessRecord;
+    }
+
+    public EInstancePerpetualAccessRecord removeEInstancePerpetualAccessRecord(EInstancePerpetualAccessRecord EInstancePerpetualAccessRecord) {
+        getEInstancePerpetualAccessRecords().remove(EInstancePerpetualAccessRecord);
+        EInstancePerpetualAccessRecord.setHoldingsRecord(null);
+
+        return EInstancePerpetualAccessRecord;
     }
 
 }

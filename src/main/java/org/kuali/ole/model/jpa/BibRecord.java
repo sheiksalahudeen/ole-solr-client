@@ -57,7 +57,7 @@ public class BibRecord implements Serializable {
 	private String updatedBy;
 
 	//bi-directional many-to-one association to HoldingsRecord
-	@OneToMany(mappedBy="oleDsBibT")
+	@OneToMany(mappedBy="bibRecord")
 	private List<HoldingsRecord> holdingsRecords;
 
 	public BibRecord() {
@@ -175,18 +175,18 @@ public class BibRecord implements Serializable {
 		this.holdingsRecords = holdingsRecords;
 	}
 
-	public HoldingsRecord addOleDsHoldingsT(HoldingsRecord oleDsHoldingsT) {
-		getHoldingsRecords().add(oleDsHoldingsT);
-		oleDsHoldingsT.setOleDsBibT(this);
+	public HoldingsRecord addHoldingsRecord(HoldingsRecord holdingsRecord) {
+		getHoldingsRecords().add(holdingsRecord);
+		holdingsRecord.setBibRecord(this);
 
-		return oleDsHoldingsT;
+		return holdingsRecord;
 	}
 
-	public HoldingsRecord removeOleDsHoldingsT(HoldingsRecord oleDsHoldingsT) {
-		getHoldingsRecords().remove(oleDsHoldingsT);
-		oleDsHoldingsT.setOleDsBibT(null);
+	public HoldingsRecord removeHoldingsRecord(HoldingsRecord holdingsRecord) {
+		getHoldingsRecords().remove(holdingsRecord);
+		holdingsRecord.setBibRecord(null);
 
-		return oleDsHoldingsT;
+		return holdingsRecord;
 	}
 
 }

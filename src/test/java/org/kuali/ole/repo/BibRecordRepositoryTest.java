@@ -35,7 +35,15 @@ public class BibRecordRepositoryTest extends BaseTestCase{
     }
 
     @Test
-    public void testBibFetch() {
+    public void fetchBib() {
+        assertNotNull(bibRecordRepository);
+        Page<BibRecord> all = bibRecordRepository.findAll(new PageRequest(0, 1));
+        assertNotNull(all);
+        System.out.println("total bib count : " + all.getSize());
+    }
+
+    @Test
+    public void loadTest() {
         try {
             OleStopWatch oleStopWatch = new OleStopWatch();
             Integer totalDocCount = 100000;

@@ -1,5 +1,6 @@
 package org.kuali.ole.executor;
 
+import org.apache.camel.ProducerTemplate;
 import org.kuali.ole.common.marc.xstream.BibMarcRecordProcessor;
 import org.kuali.ole.indexer.BibIndexer;
 import org.kuali.ole.indexer.ConfigMaps;
@@ -17,14 +18,17 @@ public class BibRecordSetupCallable implements Callable{
     private BibMarcRecordProcessor bibMarcRecordProcessor;
     private Map<String, String> fieldsToTags2IncludeMap = new HashMap<>();
     private Map<String, String> fieldsToTags2ExcludeMap = new HashMap<>();
+    private ProducerTemplate producerTemplate;
 
     public BibRecordSetupCallable(BibRecord bibRecord, BibMarcRecordProcessor bibMarcRecordProcessor,
                                   Map<String, String> fieldsToTags2IncludeMap,
-                                  Map<String, String> fieldsToTags2ExcludeMap) {
+                                  Map<String, String> fieldsToTags2ExcludeMap,
+                                  ProducerTemplate producerTemplate) {
         this.bibRecord = bibRecord;
         this.bibMarcRecordProcessor = bibMarcRecordProcessor;
         this.fieldsToTags2IncludeMap.putAll(fieldsToTags2IncludeMap);
         this.fieldsToTags2ExcludeMap.putAll(fieldsToTags2ExcludeMap);
+        this.producerTemplate = producerTemplate;
     }
 
     @Override
@@ -35,7 +39,8 @@ public class BibRecordSetupCallable implements Callable{
         configMaps.setFIELDS_TO_TAGS_2_INCLUDE_MAP(fieldsToTags2IncludeMap);
         configMaps.setFIELDS_TO_TAGS_2_EXCLUDE_MAP(fieldsToTags2ExcludeMap);
         bibIndexer.setConfigMaps(configMaps);
-        return bibIndexer.prepareSolrInputDocument(bibRecord);
+        bibIndexer.setProducerTemplate(producerTemplate);
+        return bibIndexer.prepareSolrInputDocument(bibRecord, true);
     }
 
 }

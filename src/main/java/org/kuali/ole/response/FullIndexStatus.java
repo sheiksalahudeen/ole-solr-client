@@ -155,6 +155,18 @@ public class FullIndexStatus {
         }
     }
 
+    public void addHoldingsFetched(int size) {
+        synchronized (this) {
+            this.numberOfHoldingsFetched += size;
+        }
+    }
+
+    public void addHoldingsProcessed(int count) {
+        synchronized (this) {
+            this.numberOfHoldingsProcessed += count;
+        }
+    }
+
     public void resetStatus() {
         this.running = true;
         startTime = new Date();

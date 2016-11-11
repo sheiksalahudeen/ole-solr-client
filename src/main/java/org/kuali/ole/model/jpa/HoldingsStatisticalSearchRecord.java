@@ -18,14 +18,14 @@ public class HoldingsStatisticalSearchRecord implements Serializable {
 
 	@Id
 	@Column(name="HOLDINGS_STAT_SEARCH_ID")
-	private int holdingsStatSearchId;
+	private Integer holdingsStatSearchId;
 
 	@Temporal(TemporalType.TIMESTAMP)
 	@Column(name="DATE_UPDATED")
 	private Date dateUpdated;
 
 	@Column(name="STAT_SEARCH_CODE_ID")
-	private int statSearchCodeId;
+	private Integer statSearchCodeId;
 
 	//bi-directional many-to-one association to HoldingsRecord
 	@ManyToOne
@@ -35,11 +35,11 @@ public class HoldingsStatisticalSearchRecord implements Serializable {
 	public HoldingsStatisticalSearchRecord() {
 	}
 
-	public int getHoldingsStatSearchId() {
+	public Integer getHoldingsStatSearchId() {
 		return this.holdingsStatSearchId;
 	}
 
-	public void setHoldingsStatSearchId(int holdingsStatSearchId) {
+	public void setHoldingsStatSearchId(Integer holdingsStatSearchId) {
 		this.holdingsStatSearchId = holdingsStatSearchId;
 	}
 
@@ -51,11 +51,11 @@ public class HoldingsStatisticalSearchRecord implements Serializable {
 		this.dateUpdated = dateUpdated;
 	}
 
-	public int getStatSearchCodeId() {
+	public Integer getStatSearchCodeId() {
 		return this.statSearchCodeId;
 	}
 
-	public void setStatSearchCodeId(int statSearchCodeId) {
+	public void setStatSearchCodeId(Integer statSearchCodeId) {
 		this.statSearchCodeId = statSearchCodeId;
 	}
 

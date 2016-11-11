@@ -26,9 +26,9 @@ public abstract class OleDsNgIndexer extends Constants {
     public static final String ID_FIELD_PREFIX = "id_disc_";
 //    private OleDsHelperUtil oleDsHelperUtil;
 
-    public abstract void indexDocument(Object object);
+    public abstract void indexDocument(Object object, boolean updateCount);
 
-    public abstract void updateDocument(Object object);
+    public abstract void updateDocument(Object object, boolean updateCount);
 
     public abstract void deleteDocument(String id);
 

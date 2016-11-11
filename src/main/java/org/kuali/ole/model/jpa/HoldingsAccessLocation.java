@@ -18,10 +18,10 @@ public class HoldingsAccessLocation implements Serializable {
 
 	@Id
 	@Column(name="ACCESS_LOCATION_ID")
-	private int accessLocationId;
+	private Integer accessLocationId;
 
 	@Column(name="ACCESS_LOCATION_CODE_ID")
-	private int accessLocationCodeId;
+	private Integer accessLocationCodeId;
 
 	@Temporal(TemporalType.TIMESTAMP)
 	@Column(name="DATE_UPDATED")
@@ -35,19 +35,19 @@ public class HoldingsAccessLocation implements Serializable {
 	public HoldingsAccessLocation() {
 	}
 
-	public int getAccessLocationId() {
+	public Integer getAccessLocationId() {
 		return this.accessLocationId;
 	}
 
-	public void setAccessLocationId(int accessLocationId) {
+	public void setAccessLocationId(Integer accessLocationId) {
 		this.accessLocationId = accessLocationId;
 	}
 
-	public int getAccessLocationCodeId() {
+	public Integer getAccessLocationCodeId() {
 		return this.accessLocationCodeId;
 	}
 
-	public void setAccessLocationCodeId(int accessLocationCodeId) {
+	public void setAccessLocationCodeId(Integer accessLocationCodeId) {
 		this.accessLocationCodeId = accessLocationCodeId;
 	}
 

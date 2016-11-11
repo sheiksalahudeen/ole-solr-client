@@ -1,63 +1,67 @@
 package org.kuali.ole.indexer;
-/*
+
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.map.HashedMap;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.solr.common.SolrInputDocument;
-import org.kuali.ole.DocumentUniqueIDPrefix;
-import org.kuali.ole.docstore.common.document.PHoldings;
-import org.kuali.ole.docstore.common.exception.DocstoreIndexException;
-import org.kuali.ole.docstore.engine.service.storage.rdbms.pojo.*;
-import org.kuali.ole.docstore.model.enums.DocCategory;
-import org.kuali.ole.docstore.model.enums.DocFormat;
-import org.kuali.ole.docstore.model.enums.DocType;
-import org.kuali.ole.dsng.util.CallNumberUtil;
+import org.kuali.ole.Constants;
+import org.kuali.ole.common.DocumentUniqueIDPrefix;
+import org.kuali.ole.common.enums.DocCategory;
+import org.kuali.ole.common.enums.DocFormat;
+import org.kuali.ole.common.enums.DocType;
+import org.kuali.ole.common.exception.DocstoreIndexException;
+import org.kuali.ole.common.util.CallNumberUtil;
+import org.kuali.ole.dao.OleMemorizeService;
+import org.kuali.ole.model.jpa.*;
+import org.kuali.ole.util.HelperUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.text.SimpleDateFormat;
-import java.util.*;*/
+import java.util.*;
 
 /**
  * Created by SheikS on 11/30/2015.
  */
-public abstract class HoldingIndexer extends OleDsNgIndexer {
+public class HoldingIndexer extends OleDsNgIndexer {
 
-    /*private static final Logger LOG = LoggerFactory.getLogger(HoldingIndexer.class);
+    private static final Logger LOG = LoggerFactory.getLogger(HoldingIndexer.class);
+
+    private OleMemorizeService oleMemorizeService;
 
     @Override
-    public void indexDocument(Object object) {
+    public void indexDocument(Object object, boolean updateCount) {
         HoldingsRecord holdingsRecord = (HoldingsRecord) object;
-        Map<String, SolrInputDocument> parameterMap = new HashedMap();
+        Map<String, SolrInputDocument> parameterMap = new HashMap<>();
         parameterMap = getInputDocumentForHoldings(holdingsRecord, parameterMap);
         List<SolrInputDocument> inputDocumentForHoldings = getSolrInputDocumentListFromMap(parameterMap);
         commitDocumentToSolr(inputDocumentForHoldings);
     }
 
     @Override
-    public void updateDocument(Object object) {
+    public void updateDocument(Object object, boolean updateCount) {
         HoldingsRecord holdingsRecord = (HoldingsRecord) object;
-        Map<String,SolrInputDocument> parameterMap = new HashedMap();
+        Map<String,SolrInputDocument> parameterMap = new HashMap();
         Map<String, SolrInputDocument> inputDocumentForHoldings = getInputDocumentForHoldings(holdingsRecord, parameterMap);
         List<SolrInputDocument> solrInputDocuments = getSolrInputDocumentListFromMap(inputDocumentForHoldings);
         commitDocumentToSolr(solrInputDocuments);
     }
-    
+
     @Override
     public void deleteDocument(String id) {
 
     }
 
     public Map<String,SolrInputDocument> getInputDocumentForHoldings(HoldingsRecord holdingsRecord, Map parameterMap) {
-        SolrInputDocument holdingsSolrInputDocument = buildSolrInputDocument(holdingsRecord, parameterMap);
-
+        SolrInputDocumentAndDocumentMap solrInputDocumentAndDocumentMap = buildSolrInputDocument(holdingsRecord, parameterMap);
+        SolrInputDocument holdingsSolrInputDocument = solrInputDocumentAndDocumentMap.getSolrInputDocument();
 
         Date date = new Date();
         holdingsSolrInputDocument.addField(UPDATED_BY, holdingsRecord.getUpdatedBy());
         holdingsSolrInputDocument.addField(DATE_UPDATED, date);
-        if(StringUtils.isNotBlank(holdingsRecord.getBibId())){
+        Integer bibId = holdingsRecord.getBibRecord().getBibId();
+        if(null != bibId){
 
-            String bibIdentifierWithPrefix = DocumentUniqueIDPrefix.getPrefixedId(DocumentUniqueIDPrefix.PREFIX_WORK_BIB_MARC, holdingsRecord.getBibId());
+            String bibIdentifierWithPrefix = DocumentUniqueIDPrefix.getPrefixedId(DocumentUniqueIDPrefix.PREFIX_WORK_BIB_MARC, String.valueOf(bibId));
 
             SolrInputDocument bibSolrInputDocument = getSolrInputDocumentFromMap(parameterMap,bibIdentifierWithPrefix);
 
@@ -72,7 +76,7 @@ public abstract class HoldingIndexer extends OleDsNgIndexer {
             addSolrInputDocumentToMap(parameterMap,bibSolrInputDocument);
         }
         addSolrInputDocumentToMap(parameterMap,holdingsSolrInputDocument);
-        List<ItemRecord> itemRecords = holdingsRecord.getItemRecords();
+       /* List<ItemRecord> itemRecords = holdingsRecord.getItemRecords();
         List<String> itemUUIds = new ArrayList<String>();
         if(CollectionUtils.isNotEmpty(itemRecords)){
             for (Iterator<ItemRecord> iterator = itemRecords.iterator(); iterator.hasNext(); ) {
@@ -83,12 +87,12 @@ public abstract class HoldingIndexer extends OleDsNgIndexer {
                 String itemIdentifierWithPrefix = DocumentUniqueIDPrefix.getPrefixedId(DocumentUniqueIDPrefix.PREFIX_WORK_ITEM_OLEML, String.valueOf(itemRecord.getItemId()));
                 itemUUIds.add(itemIdentifierWithPrefix);
             }
-        }
+        }*/
         return parameterMap;
     }
 
     @Override
-    public SolrInputDocument buildSolrInputDocument(Object object, Map parameterMap) {
+    public SolrInputDocumentAndDocumentMap buildSolrInputDocument(Object object, Map parameterMap) {
         SolrInputDocument solrInputDocument = null;
         try {
             solrInputDocument = prepareSolrInputDocument((HoldingsRecord) object);
@@ -99,7 +103,7 @@ public abstract class HoldingIndexer extends OleDsNgIndexer {
             throw new DocstoreIndexException(e.getMessage());
         }
 
-        return solrInputDocument;
+        return new SolrInputDocumentAndDocumentMap(solrInputDocument, parameterMap);
     }
 
     private SolrInputDocument prepareSolrInputDocument(HoldingsRecord object) throws Exception {
@@ -114,10 +118,10 @@ public abstract class HoldingIndexer extends OleDsNgIndexer {
         }
 
         setCommonFields(holdingsRecord, solrInputDocument);
-
-        if (null != holdingsRecord.getReceiptStatusRecord()) {
-            solrInputDocument.addField(RECEIPT_STATUS_SEARCH, holdingsRecord.getReceiptStatusRecord().getCode());
-            solrInputDocument.addField(RECEIPT_STATUS_DISPLAY, holdingsRecord.getReceiptStatusRecord().getCode());
+        ReceiptStatusRecord receiptStatusRecord = getOleMemorizeService().getReceiptStatusRecordById(String.valueOf(holdingsRecord.getReceiptStatusId()));
+        if (null != receiptStatusRecord) {
+            solrInputDocument.addField(RECEIPT_STATUS_SEARCH, receiptStatusRecord.getRcptStatCd());
+            solrInputDocument.addField(RECEIPT_STATUS_DISPLAY, receiptStatusRecord.getRcptStatCd());
         }
 
         if (holdingsRecord.getCopyNumber() != null) {
@@ -140,9 +144,10 @@ public abstract class HoldingIndexer extends OleDsNgIndexer {
             solrInputDocument.addField(CALL_NUMBER_PREFIX_DISPLAY, holdingsRecord.getCallNumberPrefix());
             //            solrInputDocument.addField(CLASSIFICATION_PART_DISPLAY, holdingsRecord.getCallNumber().getClassificationPart());// Todo : Need to verify
             String shelvingSchemeCodeValue = "";
-            if (holdingsRecord.getCallNumberTypeRecord() != null) {
-                shelvingSchemeCodeValue = holdingsRecord.getCallNumberTypeRecord().getCode();
-                String shelvingSchemaFullvalue = holdingsRecord.getCallNumberTypeRecord().getName();
+            CallNumberTypeRecord callNumberTypeRecord = getOleMemorizeService().getCallNumberTypeRecordById(Long.valueOf(holdingsRecord.getCallNumberTypeId()));
+            if (callNumberTypeRecord != null) {
+                shelvingSchemeCodeValue = callNumberTypeRecord.getShvlgSchmCd();
+                String shelvingSchemaFullvalue = callNumberTypeRecord.getShvlgSchmNm();
                 solrInputDocument.addField(SHELVING_SCHEME_VALUE_SEARCH, shelvingSchemaFullvalue);
                 solrInputDocument.addField(SHELVING_SCHEME_CODE_SEARCH, shelvingSchemeCodeValue);
                 solrInputDocument.addField(SHELVING_SCHEME_VALUE_DISPLAY, shelvingSchemaFullvalue);
@@ -179,7 +184,7 @@ public abstract class HoldingIndexer extends OleDsNgIndexer {
                 addLocationLevelsToSolrInputodument(location, locationLevel, solrInputDocument, loactionLevelStr);
             }
         }
-        if (null != holdingsRecord.getHoldingsType() && holdingsRecord.getHoldingsType().equalsIgnoreCase(PHoldings.PRINT)) {
+        if (null != holdingsRecord.getHoldingsType() && holdingsRecord.getHoldingsType().equalsIgnoreCase(Constants.PRINT)) {
             solrInputDocument.addField(DOC_TYPE, DocType.HOLDINGS.getCode());
             indexPHoldingsInformation(holdingsRecord, solrInputDocument);
         } else {
@@ -200,7 +205,7 @@ public abstract class HoldingIndexer extends OleDsNgIndexer {
         solrDocForHolding.addField(ID, holdingsIdentifierWithPrefix);
         solrDocForHolding.addField(HOLDINGS_IDENTIFIER, holdingsIdentifierWithPrefix);
         solrDocForHolding.addField(UNIQUE_ID, holdingsIdentifierWithPrefix);
-        solrDocForHolding.addField(STAFF_ONLY_FLAG, holdingsRecord.getStaffOnlyFlag());
+        solrDocForHolding.addField(STAFF_ONLY_FLAG, holdingsRecord.getStaffOnly());
 
     }
 
@@ -227,17 +232,19 @@ public abstract class HoldingIndexer extends OleDsNgIndexer {
                     solrInputDocument.addField(EXTENT_OF_OWNERSHIP_NOTE_VALUE_DISPLAY, extentNoteRecord.getNote());
                     solrInputDocument.addField(EXTENT_OF_OWNERSHIP_NOTE_TYPE_DISPLAY, extentNoteRecord.getType());
                 }
-                if (null != extentOfOwnerShipRecord.getExtentOfOwnerShipTypeRecord()) {
-                    solrInputDocument.addField(EXTENT_OF_OWNERSHIP_TYPE_DISPLAY, extentOfOwnerShipRecord.getExtentOfOwnerShipTypeRecord().getCode());
+                ExtentOfOwnerShipTypeRecord extentOfOwnerShipTypeRecordById = getOleMemorizeService().getExtentOfOwnerShipTypeRecordById(Long.valueOf(extentOfOwnerShipRecord.getExtOwnershipTypeId()));
+                if (null != extentOfOwnerShipTypeRecordById) {
+                    solrInputDocument.addField(EXTENT_OF_OWNERSHIP_TYPE_DISPLAY,extentOfOwnerShipTypeRecordById.getTypeOwnershipCd());
                 }
             }
         }
-        if (holdingsRecord.getHoldingsAccessLocations() != null && null != holdingsRecord.getAuthenticationType()) {
-            solrInputDocument.addField(AUTHENTICATION_DISPLAY, holdingsRecord.getAuthenticationType().getName());
+        AuthenticationTypeRecord authenticationTypeRecordById = getOleMemorizeService().getAuthenticationTypeRecordById(holdingsRecord.getAuthenticationTypeId());
+        if (holdingsRecord.getHoldingsAccessLocations() != null && null != authenticationTypeRecordById) {
+            solrInputDocument.addField(AUTHENTICATION_DISPLAY, authenticationTypeRecordById.getName());
             solrInputDocument.addField(PROXIED_DISPLAY, holdingsRecord.getProxiedResource());
-            solrInputDocument.addField(NUMBER_OF_SIMULTANEOUS_USERS_DISPLAY, holdingsRecord.getNumberSimultaneousUsers());
-            if (CollectionUtils.isNotEmpty(holdingsRecord.getHoldingsAccessLocations()) && null != holdingsRecord.getHoldingsAccessLocations().get(0).getAccessLocation()) {
-                solrInputDocument.addField(ACCESS_LOCATION_DISPLAY, holdingsRecord.getHoldingsAccessLocations().get(0).getAccessLocation().getCode());
+            solrInputDocument.addField(NUMBER_OF_SIMULTANEOUS_USERS_DISPLAY, holdingsRecord.getNumberSimultUsers());
+            if (CollectionUtils.isNotEmpty(holdingsRecord.getHoldingsAccessLocations()) && null != getOleMemorizeService().getAccessLocationById(holdingsRecord.getHoldingsAccessLocations().get(0).getAccessLocationId())) {
+                solrInputDocument.addField(ACCESS_LOCATION_DISPLAY, getOleMemorizeService().getAccessLocationById(holdingsRecord.getHoldingsAccessLocations().get(0).getAccessLocationId()).getCode());
             } else {
                 solrInputDocument.addField(ACCESS_LOCATION_DISPLAY, null);
             }
@@ -254,26 +261,30 @@ public abstract class HoldingIndexer extends OleDsNgIndexer {
         }
         solrInputDocument.addField(ACCESS_STATUS_DISPLAY, holdingsRecord.getAccessStatus());
         solrInputDocument.addField(ACCESS_STATUS_SEARCH, holdingsRecord.getAccessStatus());
-        if (CollectionUtils.isNotEmpty(holdingsRecord.getDonorList())) {
-            for (OLEHoldingsDonorRecord donorInfo : holdingsRecord.getDonorList()) {
+        List<OLEHoldingsDonorRecord> oleHoldingsDonorRecords = holdingsRecord.getOLEHoldingsDonorRecords();
+        if (CollectionUtils.isNotEmpty(oleHoldingsDonorRecords)) {
+            for (OLEHoldingsDonorRecord donorInfo : oleHoldingsDonorRecords) {
                 solrInputDocument.addField(DONOR_CODE_SEARCH, donorInfo.getDonorCode());
                 solrInputDocument.addField(DONOR_CODE_DISPLAY, donorInfo.getDonorCode());
-                solrInputDocument.addField(DONOR_PUBLIC_DISPLAY, donorInfo.getDonorPublicDisplay());
-                solrInputDocument.addField(DONOR_PUBLIC_SEARCH, donorInfo.getDonorPublicDisplay());
+                solrInputDocument.addField(DONOR_PUBLIC_DISPLAY, donorInfo.getDonorDisplayNote());
+                solrInputDocument.addField(DONOR_PUBLIC_SEARCH, donorInfo.getDonorDisplayNote());
                 solrInputDocument.addField(DONOR_NOTE_DISPLAY, donorInfo.getDonorNote());
                 solrInputDocument.addField(DONOR_NOTE_SEARCH, donorInfo.getDonorNote());
             }
         }
         List<HoldingsStatisticalSearchRecord> oleDsHoldingsStatSearchTs = holdingsRecord.getHoldingsStatisticalSearchRecords();
 
-        if (CollectionUtils.isNotEmpty(oleDsHoldingsStatSearchTs) && null != oleDsHoldingsStatSearchTs.get(0).getStatisticalSearchRecord()) {
-            solrInputDocument.addField(STATISTICAL_SEARCHING_CODE_VALUE_SEARCH, oleDsHoldingsStatSearchTs.get(0).getStatisticalSearchRecord().getName());
-            solrInputDocument.addField(STATISTICAL_SEARCHING_CODE_VALUE_DISPLAY, oleDsHoldingsStatSearchTs.get(0).getStatisticalSearchRecord().getCode());
+
+        if (CollectionUtils.isNotEmpty(oleDsHoldingsStatSearchTs)) {
+            StatisticalSearchRecord statisticalSearchRecordById = getOleMemorizeService().getStatisticalSearchRecordById(Long.valueOf(oleDsHoldingsStatSearchTs.get(0).getStatSearchCodeId()));
+            if(null != statisticalSearchRecordById) {
+                solrInputDocument.addField(STATISTICAL_SEARCHING_CODE_VALUE_SEARCH, statisticalSearchRecordById.getStatSrchNm());
+                solrInputDocument.addField(STATISTICAL_SEARCHING_CODE_VALUE_DISPLAY, statisticalSearchRecordById.getStatSrchCd());
+            }
         }
 
-       *//* solrInputDocument.addField(OLE_DS_SOLR_PREFIX + PUBLISHER_SEARCH, oleHoldings.getPublisher());*//*
-        solrInputDocument.addField(E_PUBLISHER_DISPLAY, holdingsRecord.getPublisherId());
-        solrInputDocument.addField(E_PUBLISHER_SEARCH, holdingsRecord.getPublisherId());
+        solrInputDocument.addField(E_PUBLISHER_DISPLAY, holdingsRecord.getPublisher());
+        solrInputDocument.addField(E_PUBLISHER_SEARCH, holdingsRecord.getPublisher());
 
         solrInputDocument.addField(IMPRINT_SEARCH, holdingsRecord.getImprint());
         solrInputDocument.addField(IMPRINT_DISPLAY, holdingsRecord.getImprint());
@@ -282,8 +293,8 @@ public abstract class HoldingIndexer extends OleDsNgIndexer {
             solrInputDocument.addField(ADMIN_URL_DISPLAY, holdingsRecord.getAdminUrl());
             solrInputDocument.addField(ADMIN_URL_SEARCH, holdingsRecord.getAdminUrl());
             solrInputDocument.addField(PLATFORM_DISPLAY, holdingsRecord.getPlatform());
-            solrInputDocument.addField(ADMIN_USERNAME_DISPLAY, holdingsRecord.getAdminUserName());
-            solrInputDocument.addField(ADMIN_USERNAME_SEARCH, holdingsRecord.getAdminUserName());
+            solrInputDocument.addField(ADMIN_USERNAME_DISPLAY, holdingsRecord.getAdminUsername());
+            solrInputDocument.addField(ADMIN_USERNAME_SEARCH, holdingsRecord.getAdminUsername());
             solrInputDocument.addField(ADMIN_PASSWORD_DISPLAY, holdingsRecord.getAdminPassword());
             solrInputDocument.addField(ADMIN_PASSWORD_SEARCH, holdingsRecord.getAdminPassword());
         }
@@ -302,21 +313,26 @@ public abstract class HoldingIndexer extends OleDsNgIndexer {
             solrInputDocument.addField(SUBSCRIPTION_SEARCH, holdingsRecord.getSubscriptionStatus());
         }
 
-        solrInputDocument.addField(ACCESS_USERNAME_DISPLAY, holdingsRecord.getAccessUserName());
-        solrInputDocument.addField(ACCESS_USERNAME_SEARCH, holdingsRecord.getAccessUserName());
+        solrInputDocument.addField(ACCESS_USERNAME_DISPLAY, holdingsRecord.getAccessUsername());
+        solrInputDocument.addField(ACCESS_USERNAME_SEARCH, holdingsRecord.getAccessUsername());
         solrInputDocument.addField(ACCESS_PASSWORD_DISPLAY, holdingsRecord.getAccessPassword());
         solrInputDocument.addField(ACCESS_PASSWORD_SEARCH, holdingsRecord.getAccessPassword());
-        if (null != holdingsRecord.getAuthenticationType()) {
-            solrInputDocument.addField(AUTHENTICATION_DISPLAY, holdingsRecord.getAuthenticationType().getCode());
-            solrInputDocument.addField(AUTHENTICATION_SEARCH, holdingsRecord.getAuthenticationType().getCode());
+        AuthenticationTypeRecord authenticationTypeRecordById = getOleMemorizeService().getAuthenticationTypeRecordById(holdingsRecord.getAuthenticationTypeId());
+        if (null != authenticationTypeRecordById) {
+            solrInputDocument.addField(AUTHENTICATION_DISPLAY, authenticationTypeRecordById.getCode());
+            solrInputDocument.addField(AUTHENTICATION_SEARCH, authenticationTypeRecordById.getCode());
         }
         solrInputDocument.addField(PROXIED_DISPLAY, holdingsRecord.getProxiedResource());
         solrInputDocument.addField(PROXIED_SEARCH, holdingsRecord.getProxiedResource());
-        solrInputDocument.addField(NUMBER_OF_SIMULTANEOUS_USERS_DISPLAY, holdingsRecord.getNumberSimultaneousUsers());
-        solrInputDocument.addField(NUMBER_OF_SIMULTANEOUS_USERS_SEARCH, holdingsRecord.getNumberSimultaneousUsers());
-        if (CollectionUtils.isNotEmpty(holdingsRecord.getHoldingsAccessLocations()) && null != holdingsRecord.getHoldingsAccessLocations().get(0).getAccessLocation()) {
-            solrInputDocument.addField(ACCESS_LOCATION_DISPLAY, holdingsRecord.getHoldingsAccessLocations().get(0).getAccessLocation().getCode());
-            solrInputDocument.addField(ACCESS_LOCATION_SEARCH, holdingsRecord.getHoldingsAccessLocations().get(0).getAccessLocation().getCode());
+        solrInputDocument.addField(NUMBER_OF_SIMULTANEOUS_USERS_DISPLAY, holdingsRecord.getNumberSimultUsers());
+        solrInputDocument.addField(NUMBER_OF_SIMULTANEOUS_USERS_SEARCH, holdingsRecord.getNumberSimultUsers());
+        if (CollectionUtils.isNotEmpty(holdingsRecord.getHoldingsAccessLocations())) {
+            AccessLocation accessLocationById = getOleMemorizeService().getAccessLocationById(holdingsRecord.getHoldingsAccessLocations().get(0).getAccessLocationCodeId());
+            if(null != accessLocationById) {
+                solrInputDocument.addField(ACCESS_LOCATION_DISPLAY, accessLocationById.getCode());
+                solrInputDocument.addField(ACCESS_LOCATION_SEARCH, accessLocationById.getCode());
+
+            }
         }
         solrInputDocument.addField(PERSIST_LINK_SEARCH, holdingsRecord.getLocalPersistentUri());
         solrInputDocument.addField(PERSIST_LINK_DISPLAY, holdingsRecord.getLocalPersistentUri());
@@ -324,14 +340,14 @@ public abstract class HoldingIndexer extends OleDsNgIndexer {
         solrInputDocument.addField(ILL_DISPLAY, holdingsRecord.getAllowIll());
         solrInputDocument.addField(ILL_SEARCH, holdingsRecord.getAllowIll());
 
-        List<EInstanceCoverageRecord> eInstanceCoverageRecords = holdingsRecord.geteInstanceCoverageRecordList();
+        List<EInstanceCoverageRecord> eInstanceCoverageRecords = holdingsRecord.getEInstanceCoverageRecords();
         if (CollectionUtils.isNotEmpty(eInstanceCoverageRecords)) {
             for (Iterator<EInstanceCoverageRecord> iterator = eInstanceCoverageRecords.iterator(); iterator.hasNext(); ) {
                 EInstanceCoverageRecord eInstanceCoverageRecord = iterator.next();
                 if (org.apache.commons.lang3.StringUtils.isNotBlank(eInstanceCoverageRecord.getCoverageStartDate()) || org.apache.commons.lang3.StringUtils.isNotBlank(eInstanceCoverageRecord.getCoverageEndDate())) {
                     solrInputDocument.addField(E_INSTANCE_COVERAGE_DATE, eInstanceCoverageRecord.getCoverageStartDate() + "-" + eInstanceCoverageRecord.getCoverageEndDate());
-                } else if (CollectionUtils.isNotEmpty(holdingsRecord.geteInstancePerpetualAccessRecordList())) {
-                    List<EInstancePerpetualAccessRecord> eInstancePerpetualAccessRecords = holdingsRecord.geteInstancePerpetualAccessRecordList();
+                } else if (CollectionUtils.isNotEmpty(holdingsRecord.getEInstancePerpetualAccessRecords())) {
+                    List<EInstancePerpetualAccessRecord> eInstancePerpetualAccessRecords = holdingsRecord.getEInstancePerpetualAccessRecords();
                     for (Iterator<EInstancePerpetualAccessRecord> eInstancePerpetualAccessRecordIterator = eInstancePerpetualAccessRecords.iterator();
                          eInstancePerpetualAccessRecordIterator.hasNext(); ) {
                         EInstancePerpetualAccessRecord eInstancePerpetualAccessRecord = eInstancePerpetualAccessRecordIterator.next();
@@ -350,14 +366,14 @@ public abstract class HoldingIndexer extends OleDsNgIndexer {
         String holdingsIdentifier = DocumentUniqueIDPrefix.getPrefixedId(DocumentUniqueIDPrefix.PREFIX_WORK_HOLDINGS_OLEML, String.valueOf(holdingsRecord.getHoldingsId()));
         String accessStatus = holdingsRecord.getAccessStatus();
         String copyNumber = holdingsRecord.getCopyNumber();
-        String eResourceId = holdingsRecord.geteResourceId();
+        String eResourceId = holdingsRecord.getEResourceId();
         String holdingsType = holdingsRecord.getHoldingsType();
         String imprint = holdingsRecord.getImprint();
         String localPersistentLink = holdingsRecord.getLocalPersistentUri();
-        String publisher = holdingsRecord.getPublisherId();
-        ReceiptStatusRecord receiptStatusRecord = holdingsRecord.getReceiptStatusRecord();
-        String receiptStatus = (receiptStatusRecord != null ? receiptStatusRecord.getCode() : "");
-        Date accessStatusDateUpdated = holdingsRecord.getStatusDate();
+        String publisher = holdingsRecord.getPublisher();
+        ReceiptStatusRecord receiptStatusRecord = getOleMemorizeService().getReceiptStatusRecordById(String.valueOf(holdingsRecord.getReceiptStatusId()));
+        String receiptStatus = (receiptStatusRecord != null ? receiptStatusRecord.getRcptStatCd() : "");
+        Date accessStatusDateUpdated = holdingsRecord.getAccessStatusDateUpdated();
         String statusDate = (null != accessStatusDateUpdated ? new SimpleDateFormat("dd-MM-yyyy").format(accessStatusDateUpdated) : ""); // Todo : Need to verify the date format
         String subscriptionStatus = holdingsRecord.getSubscriptionStatus();
 
@@ -379,12 +395,13 @@ public abstract class HoldingIndexer extends OleDsNgIndexer {
                 if (extentOfOwnership != null) {
                     String textualHoldings = extentOfOwnership.getText();
                     appendData(sb, textualHoldings);
-                    if (null != extentOfOwnership.getExtentOfOwnerShipTypeRecord()) {
-                        String type = extentOfOwnership.getExtentOfOwnerShipTypeRecord().getCode();
+                    ExtentOfOwnerShipTypeRecord extentOfOwnerShipTypeRecordById = getOleMemorizeService().getExtentOfOwnerShipTypeRecordById(Long.valueOf(extentOfOwnership.getExtOwnershipTypeId()));
+                    if (null != extentOfOwnerShipTypeRecordById) {
+                        String type = extentOfOwnerShipTypeRecordById.getTypeOwnershipCd();
                         appendData(sb, type);
                     }
 
-                    List<EInstanceCoverageRecord> eInstanceCoverageRecords = holdingsRecord.geteInstanceCoverageRecordList();
+                    List<EInstanceCoverageRecord> eInstanceCoverageRecords = holdingsRecord.getEInstanceCoverageRecords();
                     if (CollectionUtils.isNotEmpty(eInstanceCoverageRecords)) {
                         for (Iterator<EInstanceCoverageRecord> iterator = eInstanceCoverageRecords.iterator(); iterator.hasNext(); ) {
                             EInstanceCoverageRecord eInstanceCoverageRecord = iterator.next();
@@ -403,7 +420,7 @@ public abstract class HoldingIndexer extends OleDsNgIndexer {
                         }
                     }
 
-                    List<EInstancePerpetualAccessRecord> eInstancePerpetualAccessRecords = holdingsRecord.geteInstancePerpetualAccessRecordList();
+                    List<EInstancePerpetualAccessRecord> eInstancePerpetualAccessRecords = holdingsRecord.getEInstancePerpetualAccessRecords();
                     if (CollectionUtils.isNotEmpty(eInstancePerpetualAccessRecords)) {
                         for (Iterator<EInstancePerpetualAccessRecord> iterator = eInstancePerpetualAccessRecords.iterator(); iterator.hasNext(); ) {
                             EInstancePerpetualAccessRecord eInstancePerpetualAccessRecord = iterator.next();
@@ -438,7 +455,7 @@ public abstract class HoldingIndexer extends OleDsNgIndexer {
             }
         }
 
-        CallNumberTypeRecord callNumberTypeRecord = holdingsRecord.getCallNumberTypeRecord();
+        CallNumberTypeRecord callNumberTypeRecord = getOleMemorizeService().getCallNumberTypeRecordById(Long.valueOf(holdingsRecord.getCallNumberTypeId()));
         if (null != callNumberTypeRecord && StringUtils.isNotBlank(holdingsRecord.getCallNumber())) {
             String number = holdingsRecord.getCallNumber();
             String prefix = holdingsRecord.getCallNumberPrefix();
@@ -454,14 +471,14 @@ public abstract class HoldingIndexer extends OleDsNgIndexer {
             appendData(sb, shelvingOrderFullValue);
         }
 
-        List<OLEHoldingsDonorRecord> donorList = holdingsRecord.getDonorList();
+        List<OLEHoldingsDonorRecord> donorList = holdingsRecord.getOLEHoldingsDonorRecords();
         if (CollectionUtils.isNotEmpty(donorList)) {
             for (Iterator<OLEHoldingsDonorRecord> iterator = donorList.iterator(); iterator.hasNext(); ) {
                 OLEHoldingsDonorRecord oleHoldingsDonorRecord = iterator.next();
                 if (null != oleHoldingsDonorRecord) {
                     String donorCode = oleHoldingsDonorRecord.getDonorCode();
                     String donorInfoNote = oleHoldingsDonorRecord.getDonorNote();
-                    String donorInfoPublicDisplay = oleHoldingsDonorRecord.getDonorPublicDisplay();
+                    String donorInfoPublicDisplay = oleHoldingsDonorRecord.getDonorDisplayNote();
                     appendData(sb, donorCode);
                     appendData(sb, donorInfoNote);
                     appendData(sb, donorInfoPublicDisplay);
@@ -471,10 +488,10 @@ public abstract class HoldingIndexer extends OleDsNgIndexer {
         }
 
         String accessPassword = holdingsRecord.getAccessPassword();
-        String accessUsername = holdingsRecord.getAccessUserName();
-        AuthenticationTypeRecord authenticationTypeRecord = holdingsRecord.getAuthenticationType();
+        String accessUsername = holdingsRecord.getAccessUsername();
+        AuthenticationTypeRecord authenticationTypeRecord = getOleMemorizeService().getAuthenticationTypeRecordById(holdingsRecord.getAuthenticationTypeId());
         String authenticationType = (null != authenticationTypeRecord ? authenticationTypeRecord.getCode() : "");
-        String numberOfSimultaneousUser = String.valueOf(holdingsRecord.getNumberSimultaneousUsers());
+        String numberOfSimultaneousUser = String.valueOf(holdingsRecord.getNumberSimultUsers());
         String proxiedResource = holdingsRecord.getProxiedResource();
         appendData(sb, accessPassword);
         appendData(sb, accessUsername);
@@ -510,7 +527,7 @@ public abstract class HoldingIndexer extends OleDsNgIndexer {
 
         String adminPassword = holdingsRecord.getAdminPassword();
         String adminUrl = holdingsRecord.getAdminUrl();
-        String adminUserName = holdingsRecord.getAdminUserName();
+        String adminUserName = holdingsRecord.getAdminUsername();
         String platformName = holdingsRecord.getPlatform();
         appendData(sb, adminPassword);
         appendData(sb, adminUrl);
@@ -519,9 +536,12 @@ public abstract class HoldingIndexer extends OleDsNgIndexer {
 
         List<HoldingsStatisticalSearchRecord> oleDsHoldingsStatSearchTs = holdingsRecord.getHoldingsStatisticalSearchRecords();
 
-        if (CollectionUtils.isNotEmpty(oleDsHoldingsStatSearchTs) && null != oleDsHoldingsStatSearchTs.get(0).getStatisticalSearchRecord()) {
-            String codeValue = oleDsHoldingsStatSearchTs.get(0).getStatisticalSearchRecord().getCode();
-            appendData(sb, codeValue);
+        if (CollectionUtils.isNotEmpty(oleDsHoldingsStatSearchTs)) {
+            StatisticalSearchRecord statisticalSearchRecordById = getOleMemorizeService().getStatisticalSearchRecordById(Long.valueOf(oleDsHoldingsStatSearchTs.get(0).getStatSearchCodeId()));
+            if(null != statisticalSearchRecordById) {
+                String codeValue = statisticalSearchRecordById.getStatSrchCd();
+                appendData(sb, codeValue);
+            }
         }
         appendData(sb, holdingsRecord.getLocation());
         appendData(sb, holdingsRecord.getLocationLevel());
@@ -536,5 +556,16 @@ public abstract class HoldingIndexer extends OleDsNgIndexer {
             return destinationSolrInputDocument;
         }
         return null;
-    }*/
+    }
+
+    public OleMemorizeService getOleMemorizeService() {
+        if(null == oleMemorizeService) {
+            oleMemorizeService = HelperUtil.getBean(OleMemorizeService.class);
+        }
+        return oleMemorizeService;
+    }
+
+    public void setOleMemorizeService(OleMemorizeService oleMemorizeService) {
+        this.oleMemorizeService = oleMemorizeService;
+    }
 }

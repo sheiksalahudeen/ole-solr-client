@@ -35,7 +35,7 @@ public class OleMemorizeServiceImplTest extends BaseTestCase{
             callables.add(new Callable<Integer>() {
                 @Override
                 public Integer call() throws Exception {
-                    CallNumberTypeRecord callNumberTypeRecordById = memorizeService.getCallNumberTypeRecordById(1);
+                    CallNumberTypeRecord callNumberTypeRecordById = memorizeService.getCallNumberTypeRecordById(1L);
                     return 0;
                 }
             });

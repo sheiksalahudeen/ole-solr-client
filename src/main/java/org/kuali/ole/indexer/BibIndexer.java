@@ -1,9 +1,9 @@
 package org.kuali.ole.indexer;
 
+import org.apache.camel.ProducerTemplate;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.solr.common.SolrInputDocument;
-import org.kuali.ole.common.DocumentSearchConfig;
 import org.kuali.ole.common.DocumentUniqueIDPrefix;
 import org.kuali.ole.common.Languages;
 import org.kuali.ole.common.enums.DocCategory;
@@ -16,6 +16,7 @@ import org.kuali.ole.common.marc.xstream.BibMarcRecordProcessor;
 import org.kuali.ole.common.util.ISBNUtil;
 import org.kuali.ole.model.jpa.BibRecord;
 import org.kuali.ole.model.jpa.HoldingsRecord;
+import org.kuali.ole.util.HelperUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,25 +45,26 @@ public class BibIndexer extends OleDsNgIndexer {
 
     private BibMarcRecordProcessor bibMarcRecordProcessor;
     private ConfigMaps configMaps;
+    private ProducerTemplate producerTemplate;
 
-    public List<SolrInputDocument> prepareSolrInputDocument(BibRecord bibRecord) {
-        Map<String, SolrInputDocument> inputDocumentForBib = getInputDocumentForBib(bibRecord, null);
+    public List<SolrInputDocument> prepareSolrInputDocument(BibRecord bibRecord, boolean updateCount) {
+        Map<String, SolrInputDocument> inputDocumentForBib = getInputDocumentForBib(bibRecord, null, updateCount);
         return getSolrInputDocumentListFromMap(inputDocumentForBib);
     }
 
 
     @Override
-    public void indexDocument(Object object) {
+    public void indexDocument(Object object, boolean updateCount) {
         BibRecord bibRecord = (BibRecord) object;
-        Map<String, SolrInputDocument> inputDocumentForBib = getInputDocumentForBib(bibRecord, null);
+        Map<String, SolrInputDocument> inputDocumentForBib = getInputDocumentForBib(bibRecord, null,updateCount);
         List<SolrInputDocument> solrInputDocuments = getSolrInputDocumentListFromMap(inputDocumentForBib);
         commitDocumentToSolr(solrInputDocuments);
     }
 
     @Override
-    public void updateDocument(Object object) {
+    public void updateDocument(Object object, boolean updateCount) {
         BibRecord bibRecord = (BibRecord) object;
-        Map<String, SolrInputDocument> inputDocumentForBib = getInputDocumentForBib(bibRecord, null);
+        Map<String, SolrInputDocument> inputDocumentForBib = getInputDocumentForBib(bibRecord, null, updateCount);
         List<SolrInputDocument> solrInputDocuments = getSolrInputDocumentListFromMap(inputDocumentForBib);
         commitDocumentToSolr(solrInputDocuments);
     }
@@ -73,7 +75,7 @@ public class BibIndexer extends OleDsNgIndexer {
         indexDeletedBibInfoToSolr(bibId);
     }
 
-    public Map<String,SolrInputDocument> getInputDocumentForBib(BibRecord bibRecord, Map parameterMap) {
+    public Map<String,SolrInputDocument> getInputDocumentForBib(BibRecord bibRecord, Map parameterMap, boolean updateCount) {
         SolrInputDocumentAndDocumentMap solrInputDocumentAndDocumentMap = buildSolrInputDocument(bibRecord, parameterMap);
         SolrInputDocument bibSolrInputDocument = solrInputDocumentAndDocumentMap.getSolrInputDocument();
         parameterMap = solrInputDocumentAndDocumentMap.getMap();
@@ -82,16 +84,20 @@ public class BibIndexer extends OleDsNgIndexer {
             bibSolrInputDocument.setField(STATUS_UPDATED_ON, getDate(bibRecord.getStatusUpdatedDate().toString()));
         }
 
-        /*List<HoldingsRecord> holdingsRecords = bibRecord.getHoldingsRecords();
+        List<HoldingsRecord> holdingsRecords = bibRecord.getHoldingsRecords();
         if(CollectionUtils.isNotEmpty(holdingsRecords)) {
+            updatedHoldingsFetchedCount(holdingsRecords.size(), updateCount);
+            int processed = 0;
             for (Iterator<HoldingsRecord> iterator = holdingsRecords.iterator(); iterator.hasNext(); ) {
                 HoldingsRecord holdingsRecord = iterator.next();
                 String holdingsIdentifierWithPrefix = DocumentUniqueIDPrefix.getPrefixedId(DocumentUniqueIDPrefix.PREFIX_WORK_HOLDINGS_OLEML, String.valueOf(holdingsRecord.getHoldingsId()));
                 bibSolrInputDocument.addField(HOLDINGS_IDENTIFIER,holdingsIdentifierWithPrefix);
                 // Todo : Need to do for Holdings
-//                parameterMap = new HoldingIndexer().getInputDocumentForHoldings(holdingsRecord,parameterMap);
+                parameterMap = new HoldingIndexer().getInputDocumentForHoldings(holdingsRecord,parameterMap);
+                processed++;
             }
-        }*/
+            updatedHoldingsFetProcessedCount(processed, updateCount);
+        }
 
         return parameterMap;
     }
@@ -940,8 +946,30 @@ public class BibIndexer extends OleDsNgIndexer {
         return configMaps;
     }
 
-
     public void setConfigMaps(ConfigMaps configMaps) {
         this.configMaps = configMaps;
+    }
+
+    public void updatedHoldingsFetchedCount(int size, boolean updateCount) {
+        if(updateCount) {
+            getProducerTemplate().sendBody("oleactivemq:queue:holdingsFetchedQ", size);
+        }
+    }
+
+    public void updatedHoldingsFetProcessedCount(int size, boolean updateCount) {
+        if(updateCount) {
+            getProducerTemplate().sendBody("oleactivemq:queue:holdingsProcessedQ", size);
+        }
+    }
+
+    public ProducerTemplate getProducerTemplate() {
+        if(null == producerTemplate) {
+            producerTemplate = HelperUtil.getBean(ProducerTemplate.class);
+        }
+        return producerTemplate;
+    }
+
+    public void setProducerTemplate(ProducerTemplate producerTemplate) {
+        this.producerTemplate = producerTemplate;
     }
 }

@@ -14,6 +14,7 @@ import org.kuali.ole.service.SolrAdmin;
 import org.kuali.ole.util.HelperUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StopWatch;
 
@@ -32,6 +33,9 @@ public class BibProcessor {
 
     Logger logger = LoggerFactory.getLogger(BibIndexCallable.class);
 
+    @Autowired
+    ProducerTemplate producerTemplate;
+
     public void processBib(BibIndexingTxObject bibIndexingTxObject, Exchange exchange){
         List<SolrInputDocument> solrInputDocuments = new ArrayList<>();
         List<BibRecord> bibRecords = bibIndexingTxObject.getBibRecords();
@@ -45,7 +49,8 @@ public class BibProcessor {
             BibRecord bibRecord = iterator.next();
             futures.add(executorService.submit(new BibRecordSetupCallable(bibRecord,
                     bibIndexingTxObject.getBibMarcRecordProcessor(),
-                    bibIndexingTxObject.getFIELDS_TO_TAGS_2_INCLUDE_MAP(), bibIndexingTxObject.getFIELDS_TO_TAGS_2_INCLUDE_MAP())));
+                    bibIndexingTxObject.getFIELDS_TO_TAGS_2_INCLUDE_MAP(), bibIndexingTxObject.getFIELDS_TO_TAGS_2_INCLUDE_MAP(),
+                    producerTemplate)));
         }
 
         Integer count = 0;
@@ -90,5 +95,15 @@ public class BibProcessor {
     public void updateBibProcessedCount(int count){
         FullIndexStatus instance = FullIndexStatus.getInstance();
         instance.addBibProcessed(count);
+    }
+
+    public void updateHoldingsFetchCount(int count){
+        FullIndexStatus instance = FullIndexStatus.getInstance();
+        instance.addHoldingsFetched(count);
+    }
+
+    public void updateHoldingsProcessedCount(int count){
+        FullIndexStatus instance = FullIndexStatus.getInstance();
+        instance.addHoldingsProcessed(count);
     }
 }

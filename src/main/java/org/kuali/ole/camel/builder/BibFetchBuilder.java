@@ -30,6 +30,12 @@ public class BibFetchBuilder {
 
                     from("oleactivemq:queue:bibProcessedQ?asyncConsumer=true&concurrentConsumers=10")
                             .bean(BibProcessor.class,"updateBibProcessedCount");
+
+                    from("oleactivemq:queue:holdingsFetchedQ?asyncConsumer=true&concurrentConsumers=10")
+                            .bean(BibProcessor.class,"updateHoldingsFetchCount");
+
+                    from("oleactivemq:queue:holdingsProcessedQ?asyncConsumer=true&concurrentConsumers=10")
+                            .bean(BibProcessor.class,"updateHoldingsProcessedCount");
                 }
             });
         } catch (Exception e) {

@@ -5,6 +5,7 @@ import org.kuali.ole.model.jpa.*;
 import java.io.Serializable;
 import javax.persistence.*;
 import java.util.Date;
+import java.util.List;
 
 
 /**
@@ -18,18 +19,22 @@ public class ExtentOfOwnerShipRecord implements Serializable {
 
 	@Id
 	@Column(name="EXT_OWNERSHIP_ID")
-	private int extOwnershipId;
+	private Integer extOwnershipId;
 
 	@Temporal(TemporalType.TIMESTAMP)
 	@Column(name="DATE_UPDATED")
 	private Date dateUpdated;
 
 	@Column(name="EXT_OWNERSHIP_TYPE_ID")
-	private int extOwnershipTypeId;
+	private Integer extOwnershipTypeId;
 
-	private int ord;
+	private Integer ord;
 
 	private String text;
+
+	//bi-directional many-to-one association to ExtentNoteRecord
+	@OneToMany(mappedBy="oleDsExtOwnershipT")
+	private List<ExtentNoteRecord> extentNoteRecord;
 
 	//bi-directional many-to-one association to HoldingsRecord
 	@ManyToOne
@@ -39,11 +44,11 @@ public class ExtentOfOwnerShipRecord implements Serializable {
 	public ExtentOfOwnerShipRecord() {
 	}
 
-	public int getExtOwnershipId() {
+	public Integer getExtOwnershipId() {
 		return this.extOwnershipId;
 	}
 
-	public void setExtOwnershipId(int extOwnershipId) {
+	public void setExtOwnershipId(Integer extOwnershipId) {
 		this.extOwnershipId = extOwnershipId;
 	}
 
@@ -55,19 +60,19 @@ public class ExtentOfOwnerShipRecord implements Serializable {
 		this.dateUpdated = dateUpdated;
 	}
 
-	public int getExtOwnershipTypeId() {
+	public Integer getExtOwnershipTypeId() {
 		return this.extOwnershipTypeId;
 	}
 
-	public void setExtOwnershipTypeId(int extOwnershipTypeId) {
+	public void setExtOwnershipTypeId(Integer extOwnershipTypeId) {
 		this.extOwnershipTypeId = extOwnershipTypeId;
 	}
 
-	public int getOrd() {
+	public Integer getOrd() {
 		return this.ord;
 	}
 
-	public void setOrd(int ord) {
+	public void setOrd(Integer ord) {
 		this.ord = ord;
 	}
 
@@ -77,6 +82,28 @@ public class ExtentOfOwnerShipRecord implements Serializable {
 
 	public void setText(String text) {
 		this.text = text;
+	}
+
+	public List<ExtentNoteRecord> getExtentNoteRecords() {
+		return this.extentNoteRecord;
+	}
+
+	public void setExtentNoteRecords(List<ExtentNoteRecord> extentNoteRecord) {
+		this.extentNoteRecord = extentNoteRecord;
+	}
+
+	public ExtentNoteRecord addExtentNoteRecord(ExtentNoteRecord oleDsExtOwnershipNoteT) {
+		getExtentNoteRecords().add(oleDsExtOwnershipNoteT);
+		oleDsExtOwnershipNoteT.setOleDsExtOwnershipT(this);
+
+		return oleDsExtOwnershipNoteT;
+	}
+
+	public ExtentNoteRecord removeExtentNoteRecord(ExtentNoteRecord oleDsExtOwnershipNoteT) {
+		getExtentNoteRecords().remove(oleDsExtOwnershipNoteT);
+		oleDsExtOwnershipNoteT.setOleDsExtOwnershipT(null);
+
+		return oleDsExtOwnershipNoteT;
 	}
 
 	public HoldingsRecord getHoldingsRecord() {

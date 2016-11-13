@@ -10,6 +10,7 @@
 
 	<name>ole-solr-client</name>
 	<description>Solr Client project</description>
+	<url>http://kuali.org/ole</url>
 
 	<parent>
 		<groupId>org.springframework.boot</groupId>
@@ -23,6 +24,16 @@
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<java.version>1.8</java.version>
 	</properties>
+
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.kuali.ole</groupId>
+				<artifactId>marcimporter</artifactId>
+				<version>1.0.0</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
 
 	<dependencies>
 		<!-- https://mvnrepository.com/artifact/org.apache.camel/camel-spring-boot-starter -->
@@ -130,7 +141,6 @@
 			<artifactId>jettison</artifactId>
 			<version>1.3.8</version>
 		</dependency>
-
 
 		<dependency>
 			<groupId>org.kuali.ole</groupId>

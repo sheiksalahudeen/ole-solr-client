@@ -118,7 +118,7 @@ public class HoldingIndexer extends OleDsNgIndexer {
         }
 
         setCommonFields(holdingsRecord, solrInputDocument);
-        ReceiptStatusRecord receiptStatusRecord = getOleMemorizeService().getReceiptStatusRecordById(String.valueOf(holdingsRecord.getReceiptStatusId()));
+        ReceiptStatusRecord receiptStatusRecord = getOleMemorizeService().getReceiptStatusRecordById(getStringValue(holdingsRecord.getReceiptStatusId()));
         if (null != receiptStatusRecord) {
             solrInputDocument.addField(RECEIPT_STATUS_SEARCH, receiptStatusRecord.getRcptStatCd());
             solrInputDocument.addField(RECEIPT_STATUS_DISPLAY, receiptStatusRecord.getRcptStatCd());
@@ -144,7 +144,7 @@ public class HoldingIndexer extends OleDsNgIndexer {
             solrInputDocument.addField(CALL_NUMBER_PREFIX_DISPLAY, holdingsRecord.getCallNumberPrefix());
             //            solrInputDocument.addField(CLASSIFICATION_PART_DISPLAY, holdingsRecord.getCallNumber().getClassificationPart());// Todo : Need to verify
             String shelvingSchemeCodeValue = "";
-            CallNumberTypeRecord callNumberTypeRecord = getOleMemorizeService().getCallNumberTypeRecordById(Long.valueOf(holdingsRecord.getCallNumberTypeId()));
+            CallNumberTypeRecord callNumberTypeRecord = getOleMemorizeService().getCallNumberTypeRecordById(getLongValue(holdingsRecord.getCallNumberTypeId()));
             if (callNumberTypeRecord != null) {
                 shelvingSchemeCodeValue = callNumberTypeRecord.getShvlgSchmCd();
                 String shelvingSchemaFullvalue = callNumberTypeRecord.getShvlgSchmNm();
@@ -232,7 +232,7 @@ public class HoldingIndexer extends OleDsNgIndexer {
                     solrInputDocument.addField(EXTENT_OF_OWNERSHIP_NOTE_VALUE_DISPLAY, extentNoteRecord.getNote());
                     solrInputDocument.addField(EXTENT_OF_OWNERSHIP_NOTE_TYPE_DISPLAY, extentNoteRecord.getType());
                 }
-                ExtentOfOwnerShipTypeRecord extentOfOwnerShipTypeRecordById = getOleMemorizeService().getExtentOfOwnerShipTypeRecordById(Long.valueOf(extentOfOwnerShipRecord.getExtOwnershipTypeId()));
+                ExtentOfOwnerShipTypeRecord extentOfOwnerShipTypeRecordById = getOleMemorizeService().getExtentOfOwnerShipTypeRecordById(getLongValue(extentOfOwnerShipRecord.getExtOwnershipTypeId()));
                 if (null != extentOfOwnerShipTypeRecordById) {
                     solrInputDocument.addField(EXTENT_OF_OWNERSHIP_TYPE_DISPLAY,extentOfOwnerShipTypeRecordById.getTypeOwnershipCd());
                 }
@@ -276,7 +276,7 @@ public class HoldingIndexer extends OleDsNgIndexer {
 
 
         if (CollectionUtils.isNotEmpty(oleDsHoldingsStatSearchTs)) {
-            StatisticalSearchRecord statisticalSearchRecordById = getOleMemorizeService().getStatisticalSearchRecordById(Long.valueOf(oleDsHoldingsStatSearchTs.get(0).getStatSearchCodeId()));
+            StatisticalSearchRecord statisticalSearchRecordById = getOleMemorizeService().getStatisticalSearchRecordById(getLongValue(oleDsHoldingsStatSearchTs.get(0).getStatSearchCodeId()));
             if(null != statisticalSearchRecordById) {
                 solrInputDocument.addField(STATISTICAL_SEARCHING_CODE_VALUE_SEARCH, statisticalSearchRecordById.getStatSrchNm());
                 solrInputDocument.addField(STATISTICAL_SEARCHING_CODE_VALUE_DISPLAY, statisticalSearchRecordById.getStatSrchCd());
@@ -371,7 +371,7 @@ public class HoldingIndexer extends OleDsNgIndexer {
         String imprint = holdingsRecord.getImprint();
         String localPersistentLink = holdingsRecord.getLocalPersistentUri();
         String publisher = holdingsRecord.getPublisher();
-        ReceiptStatusRecord receiptStatusRecord = getOleMemorizeService().getReceiptStatusRecordById(String.valueOf(holdingsRecord.getReceiptStatusId()));
+        ReceiptStatusRecord receiptStatusRecord = getOleMemorizeService().getReceiptStatusRecordById(getStringValue(holdingsRecord.getReceiptStatusId()));
         String receiptStatus = (receiptStatusRecord != null ? receiptStatusRecord.getRcptStatCd() : "");
         Date accessStatusDateUpdated = holdingsRecord.getAccessStatusDateUpdated();
         String statusDate = (null != accessStatusDateUpdated ? new SimpleDateFormat("dd-MM-yyyy").format(accessStatusDateUpdated) : ""); // Todo : Need to verify the date format
@@ -395,7 +395,7 @@ public class HoldingIndexer extends OleDsNgIndexer {
                 if (extentOfOwnership != null) {
                     String textualHoldings = extentOfOwnership.getText();
                     appendData(sb, textualHoldings);
-                    ExtentOfOwnerShipTypeRecord extentOfOwnerShipTypeRecordById = getOleMemorizeService().getExtentOfOwnerShipTypeRecordById(Long.valueOf(extentOfOwnership.getExtOwnershipTypeId()));
+                    ExtentOfOwnerShipTypeRecord extentOfOwnerShipTypeRecordById = getOleMemorizeService().getExtentOfOwnerShipTypeRecordById(getLongValue(extentOfOwnership.getExtOwnershipTypeId()));
                     if (null != extentOfOwnerShipTypeRecordById) {
                         String type = extentOfOwnerShipTypeRecordById.getTypeOwnershipCd();
                         appendData(sb, type);
@@ -455,7 +455,7 @@ public class HoldingIndexer extends OleDsNgIndexer {
             }
         }
 
-        CallNumberTypeRecord callNumberTypeRecord = getOleMemorizeService().getCallNumberTypeRecordById(Long.valueOf(holdingsRecord.getCallNumberTypeId()));
+        CallNumberTypeRecord callNumberTypeRecord = getOleMemorizeService().getCallNumberTypeRecordById(getLongValue(holdingsRecord.getCallNumberTypeId()));
         if (null != callNumberTypeRecord && StringUtils.isNotBlank(holdingsRecord.getCallNumber())) {
             String number = holdingsRecord.getCallNumber();
             String prefix = holdingsRecord.getCallNumberPrefix();
@@ -537,7 +537,7 @@ public class HoldingIndexer extends OleDsNgIndexer {
         List<HoldingsStatisticalSearchRecord> oleDsHoldingsStatSearchTs = holdingsRecord.getHoldingsStatisticalSearchRecords();
 
         if (CollectionUtils.isNotEmpty(oleDsHoldingsStatSearchTs)) {
-            StatisticalSearchRecord statisticalSearchRecordById = getOleMemorizeService().getStatisticalSearchRecordById(Long.valueOf(oleDsHoldingsStatSearchTs.get(0).getStatSearchCodeId()));
+            StatisticalSearchRecord statisticalSearchRecordById = getOleMemorizeService().getStatisticalSearchRecordById(getLongValue(oleDsHoldingsStatSearchTs.get(0).getStatSearchCodeId()));
             if(null != statisticalSearchRecordById) {
                 String codeValue = statisticalSearchRecordById.getStatSrchCd();
                 appendData(sb, codeValue);
@@ -546,6 +546,20 @@ public class HoldingIndexer extends OleDsNgIndexer {
         appendData(sb, holdingsRecord.getLocation());
         appendData(sb, holdingsRecord.getLocationLevel());
         return sb.toString();
+    }
+
+    private Long getLongValue(Integer value) {
+        if(null == value) {
+            return null;
+        }
+        return Long.valueOf(value);
+    }
+
+    private String getStringValue(Integer value) {
+        if(null == value) {
+            return null;
+        }
+        return String.valueOf(value);
     }
 
     private SolrInputDocument addHoldingsDetailsToBib(SolrInputDocument sourceSolrInputDocument, SolrInputDocument destinationSolrInputDocument) {

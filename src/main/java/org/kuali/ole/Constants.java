@@ -378,4 +378,7 @@ public class Constants {
 
     public static final String PRINT="print";
 
+    public static final String UTF_8 = "UTF-8";
+    public static final String UTF_8_XML_TAG = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
+
 }

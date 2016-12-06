@@ -6,6 +6,7 @@ import org.apache.solr.client.solrj.SolrServerException;
 import org.kuali.ole.common.DocumentSearchConfig;
 import org.kuali.ole.common.marc.xstream.BibMarcRecordProcessor;
 import org.kuali.ole.repo.BibRecordRepository;
+import org.kuali.ole.repo.solr.BibCrudRepositoryMultiCoreSupport;
 import org.kuali.ole.request.FullIndexRequest;
 import org.kuali.ole.response.FullIndexStatus;
 import org.kuali.ole.service.SolrAdmin;
@@ -15,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.solr.core.SolrTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StopWatch;
@@ -39,12 +41,20 @@ public class BibIndexExecutorService {
     @Value("${solr.parent.core}")
     String solrCore;
 
+    @Value("${solr.server.protocol}")
+    String solrServerProtocol;
+
+    @Autowired
+    SolrAdmin solrAdmin;
+
     @Autowired
     BibRecordRepository bibRecordRepository;
 
     @Autowired
     ProducerTemplate producerTemplate;
 
+    @Autowired
+    SolrTemplate solrTemplate;
     private BibMarcRecordProcessor bibMarcRecordProcessor;
 
     @Async
@@ -66,8 +76,6 @@ public class BibIndexExecutorService {
             Integer totalDocCount = ((Long)bibRecordRepository.count()).intValue();
             logger.info("Total Document Count From DB : " + totalDocCount);
 
-            solrCommitScheduler = new SolrCommitScheduler();// Todo : Need to find proper place to trigger.
-
             if (totalDocCount > 0) {
                 int quotient = totalDocCount / (docsPerThread);
                 int remainder = totalDocCount % (docsPerThread);
@@ -79,20 +87,26 @@ public class BibIndexExecutorService {
                 if (callableCountByCommitInterval == 0) {
                     callableCountByCommitInterval = 1;
                 }
-                callableCountByCommitInterval = 1000;
                 logger.info("Number of callables to execute to commit indexes : " + callableCountByCommitInterval);
+
+                List<String> coreNames = new ArrayList<>();
+                setupCoreNames(numThreads, coreNames);
+                solrAdmin.createSolrCores(coreNames);
 
                 StopWatch stopWatch = new StopWatch();
                 stopWatch.start();
 
+                int coreNum = 0;
                 List<Callable<Integer>> callables = new ArrayList<>();
                 for (int pageNum = 0; pageNum < loopCount; pageNum++) {
-                    Callable callable = new BibIndexCallable(pageNum, docsPerThread,solrCore,  solrUrl,
+
+                    Callable callable = new BibIndexCallable("http://" + solrUrl, coreNames.get(coreNum), pageNum, docsPerThread,
                             getBibMarcRecordProcessor(),
                             documentSearchConfig.FIELDS_TO_TAGS_2_INCLUDE_MAP,
                             documentSearchConfig.FIELDS_TO_TAGS_2_EXCLUDE_MAP,
-                            producerTemplate, fullIndexRequest.getNoOfBibProcessThreads());
+                            producerTemplate,solrTemplate);
                     callables.add(callable);
+                    coreNum = coreNum < numThreads - 1 ? coreNum + 1 : 0;
                 }
 
                 int futureCount = 0;
@@ -124,6 +138,17 @@ public class BibIndexExecutorService {
                         }
                     }
 
+                    solrAdmin.mergeCores(coreNames);
+                    logger.info("Solr core status : " + solrAdmin.getCoresStatus());
+                    while (solrAdmin.getCoresStatus() != 0) {
+                        logger.info("Solr core status : " + solrAdmin.getCoresStatus());
+                    }
+                    deleteTempIndexes(coreNames, solrServerProtocol + solrUrl);
+                    logger.info("Num of Bibs Processed and indexed to core " + solrCore + " on commit interval : " + numOfBibsProcessed);
+                    logger.info("Total Num of Bibs Processed and indexed to core " + solrCore + " : " + totalBibsProcessed);
+//                    Long solrBibCount = bibSolrCrudRepository.countByDocType(RecapConstants.BIB);
+//                    logger.info("Total number of Bibs in Solr : " + solrBibCount);
+
                     /*SedaEndpoint solrQSedaEndPoint = (SedaEndpoint) producerTemplate.getCamelContext().getEndpoint(RecapConstants.SOLR_QUEUE);
                     Integer solrQSize = solrQSedaEndPoint.getExchanges().size();
                     logger.info("Solr Queue size : " + solrQSize);
@@ -141,6 +166,7 @@ public class BibIndexExecutorService {
                 logger.info("Total futures executed: " + futureCount);
                 stopWatch.stop();
                 logger.info("Time taken to fetch " + totalBibsProcessed + " Bib Records and index to core " + solrCore + " : " + stopWatch.getTotalTimeSeconds() + " seconds");
+                solrAdmin.unLoadCores(coreNames);
                 threadPoolExecutor.shutdown();
 
                 //Final commit
@@ -153,24 +179,11 @@ public class BibIndexExecutorService {
         } finally {
             FullIndexStatus instance = FullIndexStatus.getInstance();
             instance.setEndTime(new Date());
-            /*
-            if(null != solrCommitScheduler) {
-                solrCommitScheduler.stopScheduler();
-            }*/
         }
         mainStopWatch.stop();
-        try {
-            HelperUtil.getBean(SolrAdmin.class).commit();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (SolrServerException e) {
-            e.printStackTrace();
-        }
         logger.info("Total time taken:" + mainStopWatch.getTotalTimeSeconds() + " secs");
         return totalBibsProcessed;
     }
-
-
 
     public BibMarcRecordProcessor getBibMarcRecordProcessor() {
         if(null == bibMarcRecordProcessor) {
@@ -181,5 +194,19 @@ public class BibIndexExecutorService {
 
     public void setBibMarcRecordProcessor(BibMarcRecordProcessor bibMarcRecordProcessor) {
         this.bibMarcRecordProcessor = bibMarcRecordProcessor;
+    }
+
+    private void setupCoreNames(Integer numThreads, List<String> coreNames) {
+        for (int i = 0; i < numThreads; i++) {
+            coreNames.add("temp" + i);
+        }
+    }
+
+    private void deleteTempIndexes(List<String> coreNames, String solrUrl) {
+        for (Iterator<String> iterator = coreNames.iterator(); iterator.hasNext(); ) {
+            String coreName = iterator.next();
+            BibCrudRepositoryMultiCoreSupport bibCrudRepositoryMultiCoreSupport = new BibCrudRepositoryMultiCoreSupport(coreName, solrUrl);
+            bibCrudRepositoryMultiCoreSupport.deleteAll();
+        }
     }
 }

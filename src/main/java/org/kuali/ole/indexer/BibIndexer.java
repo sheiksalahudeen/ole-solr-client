@@ -17,6 +17,7 @@ import org.kuali.ole.common.util.ISBNUtil;
 import org.kuali.ole.model.jpa.BibRecord;
 import org.kuali.ole.model.jpa.HoldingsRecord;
 import org.kuali.ole.util.HelperUtil;
+import org.marc4j.marc.Record;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -86,7 +87,7 @@ public class BibIndexer extends OleDsNgIndexer {
 
         List<HoldingsRecord> holdingsRecords = bibRecord.getHoldingsRecords();
         if(CollectionUtils.isNotEmpty(holdingsRecords)) {
-            updatedHoldingsFetchedCount(holdingsRecords.size(), updateCount);
+//            updatedHoldingsFetchedCount(holdingsRecords.size(), updateCount);
             int processed = 0;
             for (Iterator<HoldingsRecord> iterator = holdingsRecords.iterator(); iterator.hasNext(); ) {
                 HoldingsRecord holdingsRecord = iterator.next();
@@ -96,7 +97,7 @@ public class BibIndexer extends OleDsNgIndexer {
                 parameterMap = new HoldingIndexer().getInputDocumentForHoldings(holdingsRecord,parameterMap);
                 processed++;
             }
-            updatedHoldingsFetProcessedCount(processed, updateCount);
+//            updatedHoldingsFetProcessedCount(processed, updateCount);
         }
 
         return parameterMap;
@@ -107,8 +108,10 @@ public class BibIndexer extends OleDsNgIndexer {
         SolrInputDocument solrInputDocument = null;
         try {
             BibRecord bibRecord = (BibRecord) object;
-            BibMarcRecords bibMarcRecords = getBibMarcRecordProcessor().fromXML(bibRecord.getContent());
-            solrInputDocument = buildSolrInputDocumentWithBibMarcRecord(bibMarcRecords.getRecords().get(0));
+            solrInputDocument = new SolrInputDocument();
+            //List<Record> records = convertMarcXmlToRecord(bibRecord.getContent());
+            //BibMarcRecords bibMarcRecords = getBibMarcRecordProcessor().fromXML(bibRecord.getContent());
+            /*solrInputDocument = buildSolrInputDocumentWithBibMarcRecord(bibMarcRecords.getRecords().get(0));*/
 
             setCommonFields(bibRecord, solrInputDocument);
 
@@ -948,18 +951,6 @@ public class BibIndexer extends OleDsNgIndexer {
 
     public void setConfigMaps(ConfigMaps configMaps) {
         this.configMaps = configMaps;
-    }
-
-    public void updatedHoldingsFetchedCount(int size, boolean updateCount) {
-        if(updateCount) {
-            getProducerTemplate().sendBody("oleactivemq:queue:holdingsFetchedQ", size);
-        }
-    }
-
-    public void updatedHoldingsFetProcessedCount(int size, boolean updateCount) {
-        if(updateCount) {
-            getProducerTemplate().sendBody("oleactivemq:queue:holdingsProcessedQ", size);
-        }
     }
 
     public ProducerTemplate getProducerTemplate() {

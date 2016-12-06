@@ -22,20 +22,8 @@ public class BibFetchBuilder {
             camelContext.addRoutes(new RouteBuilder() {
                 @Override
                 public void configure() throws Exception {
-                    from("oleactivemq:queue:bibQ?asyncConsumer=true&concurrentConsumers=100")
-                            .bean(BibProcessor.class,"processBib");
-
-                    from("oleactivemq:queue:bibFetchedQ?asyncConsumer=true&concurrentConsumers=10")
-                            .bean(BibProcessor.class,"updateBibFetchCount");
-
-                    from("oleactivemq:queue:bibProcessedQ?asyncConsumer=true&concurrentConsumers=10")
-                            .bean(BibProcessor.class,"updateBibProcessedCount");
-
-                    from("oleactivemq:queue:holdingsFetchedQ?asyncConsumer=true&concurrentConsumers=10")
-                            .bean(BibProcessor.class,"updateHoldingsFetchCount");
-
-                    from("oleactivemq:queue:holdingsProcessedQ?asyncConsumer=true&concurrentConsumers=10")
-                            .bean(BibProcessor.class,"updateHoldingsProcessedCount");
+                    /*from("oleactivemq:queue:bibQ?asyncConsumer=true&concurrentConsumers=100")
+                            .bean(BibProcessor.class,"processBib");*/
                 }
             });
         } catch (Exception e) {

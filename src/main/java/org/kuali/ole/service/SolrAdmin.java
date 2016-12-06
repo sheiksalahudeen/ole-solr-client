@@ -169,6 +169,20 @@ public class SolrAdmin {
         return false;
     }
 
+    public Integer getCoresStatus() {
+        CoreAdminRequest coreAdminRequest = getCoreAdminCreateRequest();
+        coreAdminRequest.setAction(CoreAdminParams.CoreAdminAction.STATUS);
+        try {
+            CoreAdminResponse coresStatusResponse = coreAdminRequest.process(solrAdminClient);
+            return coresStatusResponse.getStatus();
+        } catch (SolrServerException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     public UpdateResponse indexToSolr(List<SolrInputDocument> solrInputDocuments, boolean isCommit) {
         UpdateResponse updateResponse = null;
         try {

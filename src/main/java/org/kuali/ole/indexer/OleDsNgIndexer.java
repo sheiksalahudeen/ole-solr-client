@@ -9,6 +9,7 @@ import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.common.SolrInputField;
 //import org.kuali.incubator.SolrRequestReponseHandler;
 import org.kuali.ole.Constants;
+import org.kuali.ole.util.MarcUtil;
 /*import org.kuali.ole.constants.OleNGConstants;
 import org.kuali.ole.docstore.common.constants.DocstoreConstants;
 import org.kuali.ole.docstore.indexer.solr.DocumentLocalId;
@@ -20,7 +21,7 @@ import java.util.*;
 /**
  * Created by SheikS on 11/26/2015.
  */
-public abstract class OleDsNgIndexer extends Constants {
+public abstract class OleDsNgIndexer extends MarcUtil {
 
     private SolrRequestReponseHandler solrRequestReponseHandler;
     public static final String ID_FIELD_PREFIX = "id_disc_";

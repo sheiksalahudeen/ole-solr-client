@@ -108,10 +108,8 @@ public class BibIndexer extends OleDsNgIndexer {
         SolrInputDocument solrInputDocument = null;
         try {
             BibRecord bibRecord = (BibRecord) object;
-            solrInputDocument = new SolrInputDocument();
-            //List<Record> records = convertMarcXmlToRecord(bibRecord.getContent());
-            //BibMarcRecords bibMarcRecords = getBibMarcRecordProcessor().fromXML(bibRecord.getContent());
-            /*solrInputDocument = buildSolrInputDocumentWithBibMarcRecord(bibMarcRecords.getRecords().get(0));*/
+            BibMarcRecords bibMarcRecords = getBibMarcRecordProcessor().fromXML(bibRecord.getContent());
+            solrInputDocument = buildSolrInputDocumentWithBibMarcRecord(bibMarcRecords.getRecords().get(0));
 
             setCommonFields(bibRecord, solrInputDocument);
 

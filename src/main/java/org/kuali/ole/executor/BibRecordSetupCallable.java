@@ -40,7 +40,7 @@ public class BibRecordSetupCallable implements Callable{
         configMaps.setFIELDS_TO_TAGS_2_EXCLUDE_MAP(fieldsToTags2ExcludeMap);
         bibIndexer.setConfigMaps(configMaps);
         bibIndexer.setProducerTemplate(producerTemplate);
-        return bibIndexer.prepareSolrInputDocument(bibRecord, true);
+        return bibIndexer.prepareSolrInputDocument(bibRecord);
     }
 
 }

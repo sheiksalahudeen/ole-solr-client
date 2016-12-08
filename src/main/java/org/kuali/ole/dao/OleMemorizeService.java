@@ -13,4 +13,6 @@ public interface OleMemorizeService {
     public ReceiptStatusRecord getReceiptStatusRecordById(String id);
     public StatisticalSearchRecord getStatisticalSearchRecordById(Long id);
     public AccessLocation getAccessLocationById(Integer id);
+    public ItemStatusRecord getItemStatusById(String id);
+    public ItemTypeRecord getItemTypeById(String id);
 }

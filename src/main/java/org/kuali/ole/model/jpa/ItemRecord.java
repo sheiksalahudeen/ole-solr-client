@@ -1,11 +1,10 @@
 package org.kuali.ole.model.jpa;
 
-import org.kuali.ole.model.jpa.*;
-
 import java.io.Serializable;
 import javax.persistence.*;
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.List;
 
 
 /**
@@ -19,7 +18,7 @@ public class ItemRecord implements Serializable {
 
 	@Id
 	@Column(name="ITEM_ID")
-	private int itemId;
+	private Integer itemId;
 
 	private String barcode;
 
@@ -33,7 +32,7 @@ public class ItemRecord implements Serializable {
 	private String callNumberPrefix;
 
 	@Column(name="CALL_NUMBER_TYPE_ID")
-	private int callNumberTypeId;
+	private Integer callNumberTypeId;
 
 	@Column(name="CHECK_IN_NOTE")
 	private String checkInNote;
@@ -85,9 +84,6 @@ public class ItemRecord implements Serializable {
 
 	private String fund;
 
-	@Column(name="HIGH_DENSITY_STORAGE_ID")
-	private int highDensityStorageId;
-
 	@Column(name="ITEM_DAMAGED_NOTE")
 	private String itemDamagedNote;
 
@@ -99,15 +95,15 @@ public class ItemRecord implements Serializable {
 	private Date itemStatusDateUpdated;
 
 	@Column(name="ITEM_STATUS_ID")
-	private int itemStatusId;
+	private Integer itemStatusId;
 
 	@Column(name="ITEM_TYPE_ID")
-	private int itemTypeId;
+	private Integer itemTypeId;
 
 	private String location;
 
 	@Column(name="LOCATION_ID")
-	private int locationId;
+	private Integer locationId;
 
 	@Column(name="LOCATION_LEVEL")
 	private String locationLevel;
@@ -116,7 +112,7 @@ public class ItemRecord implements Serializable {
 	private String missingPieces;
 
 	@Column(name="MISSING_PIECES_COUNT")
-	private int missingPiecesCount;
+	private Integer missingPiecesCount;
 
 	@Temporal(TemporalType.TIMESTAMP)
 	@Column(name="MISSING_PIECES_EFFECTIVE_DATE")
@@ -126,7 +122,7 @@ public class ItemRecord implements Serializable {
 	private String missingPiecesNote;
 
 	@Column(name="NUM_OF_RENEW")
-	private int numOfRenew;
+	private Integer numOfRenew;
 
 	@Column(name="NUM_PIECES")
 	private String numPieces;
@@ -150,7 +146,7 @@ public class ItemRecord implements Serializable {
 	private String staffOnly;
 
 	@Column(name="TEMP_ITEM_TYPE_ID")
-	private int tempItemTypeId;
+	private Integer tempItemTypeId;
 
 	@Column(name="UNIQUE_ID_PREFIX")
 	private String uniqueIdPrefix;
@@ -166,19 +162,56 @@ public class ItemRecord implements Serializable {
 	@Column(name="VOLUME_NUMBER")
 	private String volumeNumber;
 
+	//bi-directional many-to-one association to ItemDamagedRecord
+	@OneToMany(mappedBy="itemRecord")
+	private List<ItemDamagedRecord> itemDamagedRecords;
+
+	//bi-directional many-to-one association to OLEItemDonorRecord
+	@OneToMany(mappedBy="itemRecord")
+	private List<OLEItemDonorRecord> oleItemDonorRecords;
+
+	//bi-directional many-to-one association to ItemNoteRecord
+	@OneToMany(mappedBy="itemRecord")
+	private List<ItemNoteRecord> itemNoteRecords;
+
+	//bi-directional many-to-one association to ItemStatisticalSearchRecord
+	@OneToMany(mappedBy="itemRecord")
+	private List<ItemStatisticalSearchRecord> itemStatisticalSearchRecords;
+
+	//bi-directional many-to-one association to HighDensityStorageRecord
+	@ManyToOne
+	@JoinColumn(name="HIGH_DENSITY_STORAGE_ID")
+	private HighDensityStorageRecord highDensityStorageRecord;
+
 	//bi-directional many-to-one association to HoldingsRecord
 	@ManyToOne
 	@JoinColumn(name="HOLDINGS_ID")
 	private HoldingsRecord holdingsRecord;
 
+	//bi-directional many-to-one association to FormerIdentifierRecord
+	@OneToMany(mappedBy="itemRecord")
+	private List<FormerIdentifierRecord> formerIdentifierRecords;
+
+	//bi-directional many-to-one association to LocationsCheckinCountRecord
+	@OneToMany(mappedBy="itemRecord")
+	private List<LocationsCheckinCountRecord> locationsCheckinCountRecords;
+
+	//bi-directional many-to-one association to ItemClaimsReturnedRecord
+	@OneToMany(mappedBy="itemRecord")
+	private List<ItemClaimsReturnedRecord> itemClaimsReturnedRecords;
+
+	//bi-directional many-to-one association to MissingPieceItemRecord
+	@OneToMany(mappedBy="itemRecord")
+	private List<MissingPieceItemRecord> missingPieceItemRecords;
+
 	public ItemRecord() {
 	}
 
-	public int getItemId() {
+	public Integer getItemId() {
 		return this.itemId;
 	}
 
-	public void setItemId(int itemId) {
+	public void setItemId(Integer itemId) {
 		this.itemId = itemId;
 	}
 
@@ -214,11 +247,11 @@ public class ItemRecord implements Serializable {
 		this.callNumberPrefix = callNumberPrefix;
 	}
 
-	public int getCallNumberTypeId() {
+	public Integer getCallNumberTypeId() {
 		return this.callNumberTypeId;
 	}
 
-	public void setCallNumberTypeId(int callNumberTypeId) {
+	public void setCallNumberTypeId(Integer callNumberTypeId) {
 		this.callNumberTypeId = callNumberTypeId;
 	}
 
@@ -350,14 +383,6 @@ public class ItemRecord implements Serializable {
 		this.fund = fund;
 	}
 
-	public int getHighDensityStorageId() {
-		return this.highDensityStorageId;
-	}
-
-	public void setHighDensityStorageId(int highDensityStorageId) {
-		this.highDensityStorageId = highDensityStorageId;
-	}
-
 	public String getItemDamagedNote() {
 		return this.itemDamagedNote;
 	}
@@ -382,19 +407,19 @@ public class ItemRecord implements Serializable {
 		this.itemStatusDateUpdated = itemStatusDateUpdated;
 	}
 
-	public int getItemStatusId() {
+	public Integer getItemStatusId() {
 		return this.itemStatusId;
 	}
 
-	public void setItemStatusId(int itemStatusId) {
+	public void setItemStatusId(Integer itemStatusId) {
 		this.itemStatusId = itemStatusId;
 	}
 
-	public int getItemTypeId() {
+	public Integer getItemTypeId() {
 		return this.itemTypeId;
 	}
 
-	public void setItemTypeId(int itemTypeId) {
+	public void setItemTypeId(Integer itemTypeId) {
 		this.itemTypeId = itemTypeId;
 	}
 
@@ -406,11 +431,11 @@ public class ItemRecord implements Serializable {
 		this.location = location;
 	}
 
-	public int getLocationId() {
+	public Integer getLocationId() {
 		return this.locationId;
 	}
 
-	public void setLocationId(int locationId) {
+	public void setLocationId(Integer locationId) {
 		this.locationId = locationId;
 	}
 
@@ -430,11 +455,11 @@ public class ItemRecord implements Serializable {
 		this.missingPieces = missingPieces;
 	}
 
-	public int getMissingPiecesCount() {
+	public Integer getMissingPiecesCount() {
 		return this.missingPiecesCount;
 	}
 
-	public void setMissingPiecesCount(int missingPiecesCount) {
+	public void setMissingPiecesCount(Integer missingPiecesCount) {
 		this.missingPiecesCount = missingPiecesCount;
 	}
 
@@ -454,11 +479,11 @@ public class ItemRecord implements Serializable {
 		this.missingPiecesNote = missingPiecesNote;
 	}
 
-	public int getNumOfRenew() {
+	public Integer getNumOfRenew() {
 		return this.numOfRenew;
 	}
 
-	public void setNumOfRenew(int numOfRenew) {
+	public void setNumOfRenew(Integer numOfRenew) {
 		this.numOfRenew = numOfRenew;
 	}
 
@@ -518,11 +543,11 @@ public class ItemRecord implements Serializable {
 		this.staffOnly = staffOnly;
 	}
 
-	public int getTempItemTypeId() {
+	public Integer getTempItemTypeId() {
 		return this.tempItemTypeId;
 	}
 
-	public void setTempItemTypeId(int tempItemTypeId) {
+	public void setTempItemTypeId(Integer tempItemTypeId) {
 		this.tempItemTypeId = tempItemTypeId;
 	}
 
@@ -566,12 +591,196 @@ public class ItemRecord implements Serializable {
 		this.volumeNumber = volumeNumber;
 	}
 
+	public List<ItemDamagedRecord> getItemDamagedRecords() {
+		return this.itemDamagedRecords;
+	}
+
+	public void setItemDamagedRecords(List<ItemDamagedRecord> itemDamagedRecords) {
+		this.itemDamagedRecords = itemDamagedRecords;
+	}
+
+	public ItemDamagedRecord addOleDsDmgdItmHstryT(ItemDamagedRecord oleDsDmgdItmHstryT) {
+		getItemDamagedRecords().add(oleDsDmgdItmHstryT);
+		oleDsDmgdItmHstryT.setItemRecord(this);
+
+		return oleDsDmgdItmHstryT;
+	}
+
+	public ItemDamagedRecord removeOleDsDmgdItmHstryT(ItemDamagedRecord oleDsDmgdItmHstryT) {
+		getItemDamagedRecords().remove(oleDsDmgdItmHstryT);
+		oleDsDmgdItmHstryT.setItemRecord(null);
+
+		return oleDsDmgdItmHstryT;
+	}
+
+	public List<OLEItemDonorRecord> getOleItemDonorRecords() {
+		return this.oleItemDonorRecords;
+	}
+
+	public void setOleItemDonorRecords(List<OLEItemDonorRecord> oleItemDonorRecords) {
+		this.oleItemDonorRecords = oleItemDonorRecords;
+	}
+
+	public OLEItemDonorRecord addOleDsItemDonorT(OLEItemDonorRecord oleDsItemDonorT) {
+		getOleItemDonorRecords().add(oleDsItemDonorT);
+		oleDsItemDonorT.setItemRecord(this);
+
+		return oleDsItemDonorT;
+	}
+
+	public OLEItemDonorRecord removeOleDsItemDonorT(OLEItemDonorRecord oleDsItemDonorT) {
+		getOleItemDonorRecords().remove(oleDsItemDonorT);
+		oleDsItemDonorT.setItemRecord(null);
+
+		return oleDsItemDonorT;
+	}
+
+	public List<ItemNoteRecord> getItemNoteRecords() {
+		return this.itemNoteRecords;
+	}
+
+	public void setItemNoteRecords(List<ItemNoteRecord> itemNoteRecords) {
+		this.itemNoteRecords = itemNoteRecords;
+	}
+
+	public ItemNoteRecord addOleDsItemNoteT(ItemNoteRecord oleDsItemNoteT) {
+		getItemNoteRecords().add(oleDsItemNoteT);
+		oleDsItemNoteT.setItemRecord(this);
+
+		return oleDsItemNoteT;
+	}
+
+	public ItemNoteRecord removeOleDsItemNoteT(ItemNoteRecord oleDsItemNoteT) {
+		getItemNoteRecords().remove(oleDsItemNoteT);
+		oleDsItemNoteT.setItemRecord(null);
+
+		return oleDsItemNoteT;
+	}
+
+	public List<ItemStatisticalSearchRecord> getItemStatisticalSearchRecords() {
+		return this.itemStatisticalSearchRecords;
+	}
+
+	public void setItemStatisticalSearchRecords(List<ItemStatisticalSearchRecord> itemStatisticalSearchRecords) {
+		this.itemStatisticalSearchRecords = itemStatisticalSearchRecords;
+	}
+
+	public ItemStatisticalSearchRecord addOleDsItemStatSearchT(ItemStatisticalSearchRecord oleDsItemStatSearchT) {
+		getItemStatisticalSearchRecords().add(oleDsItemStatSearchT);
+		oleDsItemStatSearchT.setItemRecord(this);
+
+		return oleDsItemStatSearchT;
+	}
+
+	public ItemStatisticalSearchRecord removeOleDsItemStatSearchT(ItemStatisticalSearchRecord oleDsItemStatSearchT) {
+		getItemStatisticalSearchRecords().remove(oleDsItemStatSearchT);
+		oleDsItemStatSearchT.setItemRecord(null);
+
+		return oleDsItemStatSearchT;
+	}
+
+	public HighDensityStorageRecord getHighDensityStorageRecord() {
+		return this.highDensityStorageRecord;
+	}
+
+	public void setHighDensityStorageRecord(HighDensityStorageRecord highDensityStorageRecord) {
+		this.highDensityStorageRecord = highDensityStorageRecord;
+	}
+
 	public HoldingsRecord getHoldingsRecord() {
 		return this.holdingsRecord;
 	}
 
 	public void setHoldingsRecord(HoldingsRecord holdingsRecord) {
 		this.holdingsRecord = holdingsRecord;
+	}
+
+	public List<FormerIdentifierRecord> getFormerIdentifierRecords() {
+		return this.formerIdentifierRecords;
+	}
+
+	public void setFormerIdentifierRecords(List<FormerIdentifierRecord> formerIdentifierRecords) {
+		this.formerIdentifierRecords = formerIdentifierRecords;
+	}
+
+	public FormerIdentifierRecord addOleDsItmFormerIdentifierT(FormerIdentifierRecord oleDsItmFormerIdentifierT) {
+		getFormerIdentifierRecords().add(oleDsItmFormerIdentifierT);
+		oleDsItmFormerIdentifierT.setItemRecord(this);
+
+		return oleDsItmFormerIdentifierT;
+	}
+
+	public FormerIdentifierRecord removeOleDsItmFormerIdentifierT(FormerIdentifierRecord oleDsItmFormerIdentifierT) {
+		getFormerIdentifierRecords().remove(oleDsItmFormerIdentifierT);
+		oleDsItmFormerIdentifierT.setItemRecord(null);
+
+		return oleDsItmFormerIdentifierT;
+	}
+
+	public List<LocationsCheckinCountRecord> getLocationsCheckinCountRecords() {
+		return this.locationsCheckinCountRecords;
+	}
+
+	public void setLocationsCheckinCountRecords(List<LocationsCheckinCountRecord> locationsCheckinCountRecords) {
+		this.locationsCheckinCountRecords = locationsCheckinCountRecords;
+	}
+
+	public LocationsCheckinCountRecord addOleDsLocCheckinCountT(LocationsCheckinCountRecord oleDsLocCheckinCountT) {
+		getLocationsCheckinCountRecords().add(oleDsLocCheckinCountT);
+		oleDsLocCheckinCountT.setItemRecord(this);
+
+		return oleDsLocCheckinCountT;
+	}
+
+	public LocationsCheckinCountRecord removeOleDsLocCheckinCountT(LocationsCheckinCountRecord oleDsLocCheckinCountT) {
+		getLocationsCheckinCountRecords().remove(oleDsLocCheckinCountT);
+		oleDsLocCheckinCountT.setItemRecord(null);
+
+		return oleDsLocCheckinCountT;
+	}
+
+	public List<ItemClaimsReturnedRecord> getItemClaimsReturnedRecords() {
+		return this.itemClaimsReturnedRecords;
+	}
+
+	public void setItemClaimsReturnedRecords(List<ItemClaimsReturnedRecord> itemClaimsReturnedRecords) {
+		this.itemClaimsReturnedRecords = itemClaimsReturnedRecords;
+	}
+
+	public ItemClaimsReturnedRecord addOleItmClmRtndHstryT(ItemClaimsReturnedRecord oleItmClmRtndHstryT) {
+		getItemClaimsReturnedRecords().add(oleItmClmRtndHstryT);
+		oleItmClmRtndHstryT.setItemRecord(this);
+
+		return oleItmClmRtndHstryT;
+	}
+
+	public ItemClaimsReturnedRecord removeOleItmClmRtndHstryT(ItemClaimsReturnedRecord oleItmClmRtndHstryT) {
+		getItemClaimsReturnedRecords().remove(oleItmClmRtndHstryT);
+		oleItmClmRtndHstryT.setItemRecord(null);
+
+		return oleItmClmRtndHstryT;
+	}
+
+	public List<MissingPieceItemRecord> getMissingPieceItemRecords() {
+		return this.missingPieceItemRecords;
+	}
+
+	public void setMissingPieceItemRecords(List<MissingPieceItemRecord> missingPieceItemRecords) {
+		this.missingPieceItemRecords = missingPieceItemRecords;
+	}
+
+	public MissingPieceItemRecord addOleMissPceItmHstryT(MissingPieceItemRecord oleMissPceItmHstryT) {
+		getMissingPieceItemRecords().add(oleMissPceItmHstryT);
+		oleMissPceItmHstryT.setItemRecord(this);
+
+		return oleMissPceItmHstryT;
+	}
+
+	public MissingPieceItemRecord removeOleMissPceItmHstryT(MissingPieceItemRecord oleMissPceItmHstryT) {
+		getMissingPieceItemRecords().remove(oleMissPceItmHstryT);
+		oleMissPceItmHstryT.setItemRecord(null);
+
+		return oleMissPceItmHstryT;
 	}
 
 }

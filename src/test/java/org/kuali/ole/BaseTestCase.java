@@ -3,6 +3,7 @@ package org.kuali.ole;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.kuali.ole.repo.BibRecordRepository;
+import org.kuali.ole.repo.jpa.ItemRecordRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -21,6 +22,9 @@ public class BaseTestCase {
 
 	@Autowired
 	protected BibRecordRepository bibRecordRepository;
+
+	@Autowired
+	protected ItemRecordRepository itemRecordRepository;
 
 	@Test
 	public void contextLoads() {

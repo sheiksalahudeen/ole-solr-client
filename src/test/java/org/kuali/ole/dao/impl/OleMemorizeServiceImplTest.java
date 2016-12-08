@@ -59,4 +59,13 @@ public class OleMemorizeServiceImplTest extends BaseTestCase{
         oleStopWatch.log("Total time taken : ");
     }
 
+    @Test
+    public void testItemTypeAndStatusFetch() throws Exception {
+        assertNotNull(memorizeService);
+        for(int index = 0; index < 10000; index++) {
+            memorizeService.getItemStatusById("1");
+            memorizeService.getItemTypeById("1");
+        }
+    }
+
 }

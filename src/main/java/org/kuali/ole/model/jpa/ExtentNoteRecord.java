@@ -6,7 +6,7 @@ import java.util.Date;
 
 
 /**
- * The persistent class for the ole_ds_ext_ownership_note_t database table.
+ * Created by sheiks 12/07/16.
  * 
  */
 @Entity

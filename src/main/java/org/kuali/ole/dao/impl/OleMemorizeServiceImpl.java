@@ -3,6 +3,8 @@ package org.kuali.ole.dao.impl;
 import org.kuali.ole.dao.OleMemorizeService;
 import org.kuali.ole.model.jpa.*;
 import org.kuali.ole.repo.*;
+import org.kuali.ole.repo.jpa.ItemStatusRecordRepository;
+import org.kuali.ole.repo.jpa.ItemTypeRecordRepository;
 import org.kuali.ole.spring.cache.Memoize;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -30,6 +32,12 @@ public class OleMemorizeServiceImpl implements OleMemorizeService {
 
     @Autowired
     ReceiptStatusRecordRepository receiptStatusRecordRepository;
+
+    @Autowired
+    ItemStatusRecordRepository itemStatusRecordRepository;
+
+    @Autowired
+    ItemTypeRecordRepository itemTypeRecordRepository;
 
     @Memoize
     public CallNumberTypeRecord getCallNumberTypeRecordById(Long id) {
@@ -77,5 +85,23 @@ public class OleMemorizeServiceImpl implements OleMemorizeService {
             return null;
         }
         return accessLocationRepository.findOne(id);
+    }
+
+    @Memoize
+    public ItemTypeRecord getItemTypeById(String id) {
+        System.out.println("cmg type");
+        if(null == id) {
+            return null;
+        }
+        return itemTypeRecordRepository.findOne(id);
+    }
+
+    @Memoize
+    public ItemStatusRecord getItemStatusById(String id) {
+        System.out.println("cmg status");
+        if(null == id) {
+            return null;
+        }
+        return itemStatusRecordRepository.findOne(id);
     }
 }

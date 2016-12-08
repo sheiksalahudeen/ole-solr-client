@@ -29,7 +29,7 @@ public class HoldingIndexer extends OleDsNgIndexer {
     private OleMemorizeService oleMemorizeService;
 
     @Override
-    public void indexDocument(Object object, boolean updateCount) {
+    public void indexDocument(Object object) {
         HoldingsRecord holdingsRecord = (HoldingsRecord) object;
         Map<String, SolrInputDocument> parameterMap = new HashMap<>();
         parameterMap = getInputDocumentForHoldings(holdingsRecord, parameterMap);
@@ -38,7 +38,7 @@ public class HoldingIndexer extends OleDsNgIndexer {
     }
 
     @Override
-    public void updateDocument(Object object, boolean updateCount) {
+    public void updateDocument(Object object) {
         HoldingsRecord holdingsRecord = (HoldingsRecord) object;
         Map<String,SolrInputDocument> parameterMap = new HashMap();
         Map<String, SolrInputDocument> inputDocumentForHoldings = getInputDocumentForHoldings(holdingsRecord, parameterMap);

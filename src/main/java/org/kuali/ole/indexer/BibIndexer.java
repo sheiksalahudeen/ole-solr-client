@@ -48,24 +48,24 @@ public class BibIndexer extends OleDsNgIndexer {
     private ConfigMaps configMaps;
     private ProducerTemplate producerTemplate;
 
-    public List<SolrInputDocument> prepareSolrInputDocument(BibRecord bibRecord, boolean updateCount) {
-        Map<String, SolrInputDocument> inputDocumentForBib = getInputDocumentForBib(bibRecord, null, updateCount);
+    public List<SolrInputDocument> prepareSolrInputDocument(BibRecord bibRecord) {
+        Map<String, SolrInputDocument> inputDocumentForBib = getInputDocumentForBib(bibRecord, null);
         return getSolrInputDocumentListFromMap(inputDocumentForBib);
     }
 
 
     @Override
-    public void indexDocument(Object object, boolean updateCount) {
+    public void indexDocument(Object object) {
         BibRecord bibRecord = (BibRecord) object;
-        Map<String, SolrInputDocument> inputDocumentForBib = getInputDocumentForBib(bibRecord, null,updateCount);
+        Map<String, SolrInputDocument> inputDocumentForBib = getInputDocumentForBib(bibRecord, null);
         List<SolrInputDocument> solrInputDocuments = getSolrInputDocumentListFromMap(inputDocumentForBib);
         commitDocumentToSolr(solrInputDocuments);
     }
 
     @Override
-    public void updateDocument(Object object, boolean updateCount) {
+    public void updateDocument(Object object) {
         BibRecord bibRecord = (BibRecord) object;
-        Map<String, SolrInputDocument> inputDocumentForBib = getInputDocumentForBib(bibRecord, null, updateCount);
+        Map<String, SolrInputDocument> inputDocumentForBib = getInputDocumentForBib(bibRecord, null);
         List<SolrInputDocument> solrInputDocuments = getSolrInputDocumentListFromMap(inputDocumentForBib);
         commitDocumentToSolr(solrInputDocuments);
     }
@@ -76,7 +76,7 @@ public class BibIndexer extends OleDsNgIndexer {
         indexDeletedBibInfoToSolr(bibId);
     }
 
-    public Map<String,SolrInputDocument> getInputDocumentForBib(BibRecord bibRecord, Map parameterMap, boolean updateCount) {
+    public Map<String,SolrInputDocument> getInputDocumentForBib(BibRecord bibRecord, Map parameterMap) {
         SolrInputDocumentAndDocumentMap solrInputDocumentAndDocumentMap = buildSolrInputDocument(bibRecord, parameterMap);
         SolrInputDocument bibSolrInputDocument = solrInputDocumentAndDocumentMap.getSolrInputDocument();
         parameterMap = solrInputDocumentAndDocumentMap.getMap();

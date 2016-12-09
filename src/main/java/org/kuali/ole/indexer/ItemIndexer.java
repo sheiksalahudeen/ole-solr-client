@@ -121,7 +121,7 @@ public class ItemIndexer extends OleDsNgIndexer {
             solrInputDocument.addField(LOCALID_SEARCH, itemRecord.getItemId());
 
 
-            solrInputDocument.addField(CLMS_RET_FLAG, itemRecord.getClaimsReturned()); //Todo : boolean converter
+            solrInputDocument.addField(CLMS_RET_FLAG, getBooleanValueYorN(itemRecord.getClaimsReturned()));
             Date claimsReturnedDateCreated = itemRecord.getClaimsReturnedDateCreated();
             solrInputDocument.addField(CLMS_RET_FLAG_CRE_DATE, convertDateToString(DOCSTORE_DATE_FORMAT, claimsReturnedDateCreated));
             solrInputDocument.addField(CLMS_RET_NOTE, itemRecord.getClaimsReturnedNote());
@@ -133,7 +133,7 @@ public class ItemIndexer extends OleDsNgIndexer {
             solrInputDocument.addField(ORG_DUE_DATE_TIME, originalDueDateString);
             solrInputDocument.addField(ITEM_STATUS_EFFECTIVE_DATE, convertDateToString(DOCSTORE_DATE_FORMAT, itemRecord.getItemStatusDateUpdated()));
             solrInputDocument.addField(CHECK_OUT_DUE_DATE_TIME, convertDateToString(DOCSTORE_DATE_FORMAT, itemRecord.getCheckOutDateTime()));
-            solrInputDocument.addField(STAFF_ONLY_FLAG, itemRecord.getStaffOnly()); //Todo : boolean converter
+            solrInputDocument.addField(STAFF_ONLY_FLAG, getBooleanValueYorN(itemRecord.getStaffOnly()));
 //        solrInputDocument.addField(IS_ANALYTIC, itemRecord.isAnalytic()); // Todo : Need to verify (Ans : Need to verify with bib status) (HoldingsItemRecord - holdingsId and ItemId)
             solrInputDocument.addField(ITEM_IDENTIFIER_SEARCH, itemIdentifierWithPrefix);
             solrInputDocument.addField(BARCODE_ARSL_SEARCH, itemRecord.getBarcodeArsl());
@@ -148,9 +148,9 @@ public class ItemIndexer extends OleDsNgIndexer {
             solrInputDocument.addField(MISSING_PIECE_FLAG_NOTE_SEARCH, itemRecord.getMissingPiecesNote());
             solrInputDocument.addField(CLAIMS_RETURNED_NOTE_SEARCH, itemRecord.getClaimsReturnedNote());
             solrInputDocument.addField(DAMAGED_ITEM_NOTE_SEARCH, itemRecord.getItemDamagedNote());
-            solrInputDocument.addField(MISSING_PIECE_FLAG_SEARCH, itemRecord.getMissingPieces()); // Todo : boolean converter
-            solrInputDocument.addField(CLAIMS_RETURNED_FLAG_SEARCH, itemRecord.getClaimsReturned()); // Todo : boolean converter
-            solrInputDocument.addField(ITEM_DAMAGED_FLAG_SEARCH, itemRecord.getItemDamagedStatus()); // Todo : boolean converter
+            solrInputDocument.addField(MISSING_PIECE_FLAG_SEARCH, getBooleanValueYorN(itemRecord.getMissingPieces()));
+            solrInputDocument.addField(CLAIMS_RETURNED_FLAG_SEARCH, getBooleanValueYorN(itemRecord.getClaimsReturned()));
+            solrInputDocument.addField(ITEM_DAMAGED_FLAG_SEARCH, getBooleanValueYorN(itemRecord.getItemDamagedStatus()));
             solrInputDocument.addField(MISSING_PIECE_COUNT_SEARCH,itemRecord.getMissingPiecesCount());
             solrInputDocument.addField(NUMBER_OF_PIECES_SEARCH,itemRecord.getNumPieces());
 
@@ -299,9 +299,9 @@ public class ItemIndexer extends OleDsNgIndexer {
             solrInputDocument.addField(MISSING_PIECE_FLAG_NOTE_DISPLAY, itemRecord.getMissingPiecesNote());
             solrInputDocument.addField(CLAIMS_RETURNED_NOTE_DISPLAY, itemRecord.getClaimsReturnedNote());
             solrInputDocument.addField(DAMAGED_ITEM_NOTE_DISPLAY, itemRecord.getItemDamagedNote());
-            solrInputDocument.addField(MISSING_PIECE_FLAG_DISPLAY, itemRecord.getMissingPieces()); // Todo : boolean converter
-            solrInputDocument.addField(CLAIMS_RETURNED_FLAG_DISPLAY, itemRecord.getClaimsReturned()); // Todo : boolean converter
-            solrInputDocument.addField(ITEM_DAMAGED_FLAG_DISPLAY, itemRecord.getItemDamagedStatus()); // Todo : boolean converter
+            solrInputDocument.addField(MISSING_PIECE_FLAG_DISPLAY, getBooleanValueYorN(itemRecord.getMissingPieces()));
+            solrInputDocument.addField(CLAIMS_RETURNED_FLAG_DISPLAY, getBooleanValueYorN(itemRecord.getClaimsReturned()));
+            solrInputDocument.addField(ITEM_DAMAGED_FLAG_DISPLAY, getBooleanValueYorN(itemRecord.getItemDamagedStatus()));
             solrInputDocument.addField(MISSING_PIECE_COUNT_DISPLAY,itemRecord.getMissingPiecesCount());
             solrInputDocument.addField(NUMBER_OF_PIECES_DISPLAY,itemRecord.getNumPieces());
             solrInputDocument.addField(CREATED_BY,itemRecord.getCreatedBy());
@@ -432,12 +432,11 @@ public class ItemIndexer extends OleDsNgIndexer {
         appendData(sb, vendorLineItemIdentifier);
         //appendData(sb, volumeNumber);
 
-        // TODO :  Need to write boolean converter for JPA and need to change the variable type to boolean
         boolean staffOnlyFlag = getBooleanValueYorN(itemRecord.getStaffOnly());
-        boolean claimsReturnedFlag = getBooleanValueYorN(itemRecord.getClaimsReturned()); //Todo : boolean converter
-        boolean fastAddFlag = getBooleanValueYorN(itemRecord.getFastAdd()); //Todo : boolean converter
-        boolean itemDamagedStatus = getBooleanValueYorN(itemRecord.getItemDamagedStatus()); //Todo : boolean converter
-        boolean missingPieceFlag = getBooleanValueYorN(itemRecord.getMissingPieces()); //Todo : boolean converter
+        boolean claimsReturnedFlag = getBooleanValueYorN(itemRecord.getClaimsReturned());
+        boolean fastAddFlag = getBooleanValueYorN(itemRecord.getFastAdd());
+        boolean itemDamagedStatus = getBooleanValueYorN(itemRecord.getItemDamagedStatus());
+        boolean missingPieceFlag = getBooleanValueYorN(itemRecord.getMissingPieces());
 
         appendData(sb, String.valueOf(staffOnlyFlag));
         appendData(sb, String.valueOf(claimsReturnedFlag));

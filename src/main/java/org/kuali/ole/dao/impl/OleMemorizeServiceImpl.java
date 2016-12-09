@@ -89,7 +89,6 @@ public class OleMemorizeServiceImpl implements OleMemorizeService {
 
     @Memoize
     public ItemTypeRecord getItemTypeById(String id) {
-        System.out.println("cmg type");
         if(null == id) {
             return null;
         }
@@ -98,7 +97,6 @@ public class OleMemorizeServiceImpl implements OleMemorizeService {
 
     @Memoize
     public ItemStatusRecord getItemStatusById(String id) {
-        System.out.println("cmg status");
         if(null == id) {
             return null;
         }

@@ -1,27 +1,27 @@
 package org.kuali.ole.indexer;
-/*
+
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.map.HashedMap;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.solr.common.SolrInputDocument;
-import org.kuali.ole.DocumentUniqueIDPrefix;
-import org.kuali.ole.docstore.common.exception.DocstoreIndexException;
-import org.kuali.ole.docstore.engine.service.storage.rdbms.pojo.*;
-import org.kuali.ole.docstore.model.enums.DocCategory;
-import org.kuali.ole.dsng.util.CallNumberUtil;
-import org.kuali.ole.dsng.util.EnumerationUtil;
-import org.kuali.rice.krad.service.KRADServiceLocator;
+import org.kuali.ole.common.DocumentUniqueIDPrefix;
+import org.kuali.ole.common.enums.DocCategory;
+import org.kuali.ole.common.exception.DocstoreIndexException;
+import org.kuali.ole.common.util.CallNumberUtil;
+import org.kuali.ole.common.util.EnumerationUtil;
+import org.kuali.ole.dao.OleMemorizeService;
+import org.kuali.ole.model.jpa.*;
+import org.kuali.ole.util.HelperUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;*/
+import java.util.*;
 
 /**
  * Created by SheikS on 11/30/2015.
  */
-public abstract class ItemIndexer extends OleDsNgIndexer {
+public class ItemIndexer extends OleDsNgIndexer {
 
-    /*private static final Logger LOG = LoggerFactory.getLogger(ItemIndexer.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ItemIndexer.class);
 
     @Override
     public void indexDocument(Object object) {
@@ -36,7 +36,7 @@ public abstract class ItemIndexer extends OleDsNgIndexer {
     public void updateDocument(Object object) {
 
         ItemRecord itemRecord = (ItemRecord) object;
-        Map<String,SolrInputDocument> parameterMap = new HashedMap();
+        Map<String,SolrInputDocument> parameterMap = new HashMap<>();
 
         Map<String, SolrInputDocument> inputDocumentForItem = getInputDocumentForItem(itemRecord, parameterMap);
 
@@ -51,10 +51,12 @@ public abstract class ItemIndexer extends OleDsNgIndexer {
     }
 
     public Map<String,SolrInputDocument> getInputDocumentForItem(ItemRecord itemRecord, Map parameterMap) {
-        SolrInputDocument itemSolrInputDocument = buildSolrInputDocument(itemRecord, parameterMap);
+        SolrInputDocumentAndDocumentMap solrInputDocumentAndDocumentMap = buildSolrInputDocument(itemRecord, parameterMap);
+        SolrInputDocument itemSolrInputDocument = solrInputDocumentAndDocumentMap.getSolrInputDocument();
+        parameterMap = solrInputDocumentAndDocumentMap.getMap();
 
-        /*//***********************
-        String holdingsId = itemRecord.getHoldingsId();
+        //***********************
+        Integer holdingsId = itemRecord.getHoldingsRecord().getHoldingsId();
         String holdingsIdentifierWithPrefix = DocumentUniqueIDPrefix.getPrefixedId(
                 DocumentUniqueIDPrefix.PREFIX_WORK_HOLDINGS_OLEML, String.valueOf(holdingsId));
         if (holdingsId != null) {
@@ -77,12 +79,10 @@ public abstract class ItemIndexer extends OleDsNgIndexer {
 
             // Todo : Need to populate the holdings record
             // Todo : Need to do auto fetch (Lazy Loading)
-            Map<String, String> map = new HashMap<String,String>();
-            map.put("holdingsId", holdingsId);
-            HoldingsRecord holdingsRecord = KRADServiceLocator.getBusinessObjectService().findByPrimaryKey(HoldingsRecord.class, map);
+            HoldingsRecord holdingsRecord = itemRecord.getHoldingsRecord();
             String bibId = "";
             if(null != holdingsRecord) {
-                bibId = holdingsRecord.getBibId();
+                bibId = String.valueOf(holdingsRecord.getBibRecord().getBibId());
             }
             String bibIdentifierWithPrefix = DocumentUniqueIDPrefix.getPrefixedId(
                     DocumentUniqueIDPrefix.PREFIX_WORK_BIB_MARC, String.valueOf(bibId));
@@ -98,13 +98,13 @@ public abstract class ItemIndexer extends OleDsNgIndexer {
             }
         }
 
-        /*//***********************
+        //***********************
 
         return parameterMap;
     }
 
     @Override
-    public SolrInputDocument buildSolrInputDocument(Object object, Map<String, SolrInputDocument> parameterMap) {
+    public SolrInputDocumentAndDocumentMap buildSolrInputDocument(Object object, Map<String, SolrInputDocument> parameterMap) {
         SolrInputDocument solrInputDocument = new SolrInputDocument();
         try {
             ItemRecord itemRecord = (ItemRecord) object;
@@ -121,38 +121,38 @@ public abstract class ItemIndexer extends OleDsNgIndexer {
             solrInputDocument.addField(LOCALID_SEARCH, itemRecord.getItemId());
 
 
-            solrInputDocument.addField(CLMS_RET_FLAG, itemRecord.getClaimsReturnedFlag());
-            Date claimsReturnedDateCreated = itemRecord.getClaimsReturnedFlagCreateDate();
+            solrInputDocument.addField(CLMS_RET_FLAG, itemRecord.getClaimsReturned()); //Todo : boolean converter
+            Date claimsReturnedDateCreated = itemRecord.getClaimsReturnedDateCreated();
             solrInputDocument.addField(CLMS_RET_FLAG_CRE_DATE, convertDateToString(DOCSTORE_DATE_FORMAT, claimsReturnedDateCreated));
             solrInputDocument.addField(CLMS_RET_NOTE, itemRecord.getClaimsReturnedNote());
             solrInputDocument.addField(CURRENT_BORROWER, itemRecord.getCurrentBorrower());
             solrInputDocument.addField(PROXY_BORROWER, itemRecord.getProxyBorrower());
             String dueDateString = convertDateToString(DOCSTORE_DATE_FORMAT, itemRecord.getDueDateTime());
             solrInputDocument.addField(DUE_DATE_TIME, dueDateString);
-            String originalDueDateString = convertDateToString(DOCSTORE_DATE_FORMAT, itemRecord.getOriginalDueDate());
+            String originalDueDateString = convertDateToString(DOCSTORE_DATE_FORMAT, itemRecord.getOrgDueDateTime());
             solrInputDocument.addField(ORG_DUE_DATE_TIME, originalDueDateString);
-            solrInputDocument.addField(ITEM_STATUS_EFFECTIVE_DATE, convertDateToString(DOCSTORE_DATE_FORMAT, itemRecord.getEffectiveDate()));
+            solrInputDocument.addField(ITEM_STATUS_EFFECTIVE_DATE, convertDateToString(DOCSTORE_DATE_FORMAT, itemRecord.getItemStatusDateUpdated()));
             solrInputDocument.addField(CHECK_OUT_DUE_DATE_TIME, convertDateToString(DOCSTORE_DATE_FORMAT, itemRecord.getCheckOutDateTime()));
-            solrInputDocument.addField(STAFF_ONLY_FLAG, itemRecord.getStaffOnlyFlag());
+            solrInputDocument.addField(STAFF_ONLY_FLAG, itemRecord.getStaffOnly()); //Todo : boolean converter
 //        solrInputDocument.addField(IS_ANALYTIC, itemRecord.isAnalytic()); // Todo : Need to verify (Ans : Need to verify with bib status) (HoldingsItemRecord - holdingsId and ItemId)
             solrInputDocument.addField(ITEM_IDENTIFIER_SEARCH, itemIdentifierWithPrefix);
-            solrInputDocument.addField(BARCODE_ARSL_SEARCH, itemRecord.getBarCodeArsl());
+            solrInputDocument.addField(BARCODE_ARSL_SEARCH, itemRecord.getBarcodeArsl());
             solrInputDocument.addField(COPY_NUMBER_SEARCH, itemRecord.getCopyNumber());
 //        solrInputDocument.addField(COPY_NUMBER_LABEL_SEARCH, itemRecord.getCopyNumberLabel()); // Todo : Need to verify
-            solrInputDocument.addField(PURCHASE_ORDER_LINE_ITEM_IDENTIFIER_SEARCH, itemRecord.getPurchaseOrderItemLineId());
+            solrInputDocument.addField(PURCHASE_ORDER_LINE_ITEM_IDENTIFIER_SEARCH, itemRecord.getPurchaseOrderLineItemId());
             solrInputDocument.addField(VENDOR_LINE_ITEM_IDENTIFIER_SEARCH, itemRecord.getVendorLineItemId());
 //        solrInputDocument.addField(VOLUME_NUMBER_LABEL_SEARCH, itemRecord.getVolumeNumberLabel()); // Todo :Need to verify
 //        solrInputDocument.addField(VOLUME_NUMBER_SEARCH, itemRecord.getVolumeNumberLabel());// Todo :Need to verify
             solrInputDocument.addField(ENUMERATION_SEARCH, itemRecord.getEnumeration());
             solrInputDocument.addField(CHRONOLOGY_SEARCH, itemRecord.getChronology());
-            solrInputDocument.addField(MISSING_PIECE_FLAG_NOTE_SEARCH, itemRecord.getMissingPieceFlagNote());
+            solrInputDocument.addField(MISSING_PIECE_FLAG_NOTE_SEARCH, itemRecord.getMissingPiecesNote());
             solrInputDocument.addField(CLAIMS_RETURNED_NOTE_SEARCH, itemRecord.getClaimsReturnedNote());
-            solrInputDocument.addField(DAMAGED_ITEM_NOTE_SEARCH, itemRecord.getDamagedItemNote());
-            solrInputDocument.addField(MISSING_PIECE_FLAG_SEARCH, itemRecord.isMissingPieceFlag());
-            solrInputDocument.addField(CLAIMS_RETURNED_FLAG_SEARCH, itemRecord.getClaimsReturnedFlag());
-            solrInputDocument.addField(ITEM_DAMAGED_FLAG_SEARCH, itemRecord.isItemDamagedStatus());
+            solrInputDocument.addField(DAMAGED_ITEM_NOTE_SEARCH, itemRecord.getItemDamagedNote());
+            solrInputDocument.addField(MISSING_PIECE_FLAG_SEARCH, itemRecord.getMissingPieces()); // Todo : boolean converter
+            solrInputDocument.addField(CLAIMS_RETURNED_FLAG_SEARCH, itemRecord.getClaimsReturned()); // Todo : boolean converter
+            solrInputDocument.addField(ITEM_DAMAGED_FLAG_SEARCH, itemRecord.getItemDamagedStatus()); // Todo : boolean converter
             solrInputDocument.addField(MISSING_PIECE_COUNT_SEARCH,itemRecord.getMissingPiecesCount());
-            solrInputDocument.addField(NUMBER_OF_PIECES_SEARCH,itemRecord.getNumberOfPieces());
+            solrInputDocument.addField(NUMBER_OF_PIECES_SEARCH,itemRecord.getNumPieces());
 
             Date date = new Date();
             // Item call number should be indexed if it is available at item level or holdings level.
@@ -168,9 +168,10 @@ public abstract class ItemIndexer extends OleDsNgIndexer {
                 String shelvingSchemeCode = "";
                 String shelvingSchemeValue = "";
 
-                if (null != itemRecord.getCallNumberTypeRecord()) {
-                    shelvingSchemeCode = itemRecord.getCallNumberTypeRecord().getCode();
-                    shelvingSchemeValue = itemRecord.getCallNumberTypeRecord().getName();
+                CallNumberTypeRecord callNumberTypeRecord = getOleMemorizeService().getCallNumberTypeRecordById(getLongValue(itemRecord.getCallNumberTypeId()));
+                if (callNumberTypeRecord != null) {
+                    shelvingSchemeCode = callNumberTypeRecord.getShvlgSchmCd();
+                    shelvingSchemeValue = callNumberTypeRecord.getShvlgSchmNm();
                     if (StringUtils.isNotEmpty(shelvingSchemeCode)) {
                         solrInputDocument.addField(SHELVING_SCHEME_CODE_SEARCH, shelvingSchemeCode);
                         solrInputDocument.addField(SHELVING_SCHEME_CODE_DISPLAY, shelvingSchemeCode);
@@ -188,7 +189,7 @@ public abstract class ItemIndexer extends OleDsNgIndexer {
                 }else if (StringUtils.isEmpty(shelvingOrder) && itemRecord.getCallNumber() != null) {
                     try {
                         //Build sortable key for a valid call number
-                        if (itemRecord.getCallNumberTypeRecord() != null) {
+                        if (callNumberTypeRecord != null) {
                             if(StringUtils.isNotEmpty(itemCallNumber) && itemCallNumber.trim().length() > 0) {
                                 shelvingOrder = new CallNumberUtil().buildSortableCallNumber(itemCallNumber, itemRecord.getShelvingOrder());
                             }
@@ -220,15 +221,15 @@ public abstract class ItemIndexer extends OleDsNgIndexer {
                     String copyNumberSort = new EnumerationUtil().getNormalizedEnumeration(itemRecord.getCopyNumber());
                     solrInputDocument.addField(COPYNUMBER_SORT, copyNumberSort);
                 }
-                if (null != itemRecord.getBarCode()) {
-                    solrInputDocument.addField(ITEM_BARCODE_SORT, itemRecord.getBarCode());
+                if (null != itemRecord.getBarcode()) {
+                    solrInputDocument.addField(ITEM_BARCODE_SORT, itemRecord.getBarcode());
                 }
             }
-
-            if (itemRecord.getItemStatusRecord() != null) {
-                solrInputDocument.addField(ITEM_STATUS_DISPLAY, itemRecord.getItemStatusRecord().getCode());
-                solrInputDocument.addField(ITEM_STATUS_SEARCH, itemRecord.getItemStatusRecord().getName());
-                solrInputDocument.addField(ITEM_STATUS_SORT, itemRecord.getItemStatusRecord().getName());
+            ItemStatusRecord itemStatusRecord = getOleMemorizeService().getItemStatusById(getStringValue(itemRecord.getItemStatusId()));
+            if (itemStatusRecord != null) {
+                solrInputDocument.addField(ITEM_STATUS_DISPLAY, itemStatusRecord.getItemAvailStatCd());
+                solrInputDocument.addField(ITEM_STATUS_SEARCH, itemStatusRecord.getItemAvailStatNm());
+                solrInputDocument.addField(ITEM_STATUS_SORT, itemStatusRecord.getItemAvailStatNm());
             }
 
             StringBuffer loactionLevelStr = new StringBuffer(" ");
@@ -250,22 +251,24 @@ public abstract class ItemIndexer extends OleDsNgIndexer {
 
             solrInputDocument.addField(ALL_TEXT, getAllTextValueForItem(itemRecord) + loactionLevelStr.toString());
 
-            if (itemRecord.getItemTypeRecord() != null) {
-                solrInputDocument.addField(ITEM_TYPE_FULL_VALUE_SEARCH, itemRecord.getItemTypeRecord().getName());
-                solrInputDocument.addField(ITEM_TYPE_CODE_VALUE_SEARCH, itemRecord.getItemTypeRecord().getCode());
-                solrInputDocument.addField(ITEM_TYPE_FULL_VALUE_DISPLAY, itemRecord.getItemTypeRecord().getName());
-                solrInputDocument.addField(ITEM_TYPE_CODE_VALUE_DISPLAY, itemRecord.getItemTypeRecord().getCode());
+            ItemTypeRecord itemTypeRecord = getOleMemorizeService().getItemTypeById(getStringValue(itemRecord.getItemTypeId()));
+            if (itemTypeRecord != null) {
+                solrInputDocument.addField(ITEM_TYPE_FULL_VALUE_SEARCH, itemTypeRecord.getItmTypNm());
+                solrInputDocument.addField(ITEM_TYPE_CODE_VALUE_SEARCH, itemTypeRecord.getItmTypCd());
+                solrInputDocument.addField(ITEM_TYPE_FULL_VALUE_DISPLAY, itemTypeRecord.getItmTypNm());
+                solrInputDocument.addField(ITEM_TYPE_CODE_VALUE_DISPLAY, itemTypeRecord.getItmTypCd());
             }
 
-            if (itemRecord.getItemTempTypeRecord() != null) {
-                solrInputDocument.addField(TEMPORARY_ITEM_TYPE_FULL_VALUE_SEARCH, itemRecord.getItemTempTypeRecord().getName());
-                solrInputDocument.addField(TEMPORARY_ITEM_TYPE_CODE_VALUE_SEARCH, itemRecord.getItemTempTypeRecord().getCode());
-                solrInputDocument.addField(TEMPORARY_ITEM_TYPE_FULL_VALUE_DISPLAY, itemRecord.getItemTempTypeRecord().getName());
-                solrInputDocument.addField(TEMPORARY_ITEM_TYPE_CODE_VALUE_DISPLAY, itemRecord.getItemTempTypeRecord().getCode());
+            ItemTypeRecord tempItemTypeRecord = getOleMemorizeService().getItemTypeById(getStringValue(itemRecord.getTempItemTypeId()));
+            if (tempItemTypeRecord != null) {
+                solrInputDocument.addField(TEMPORARY_ITEM_TYPE_FULL_VALUE_SEARCH, tempItemTypeRecord.getItmTypNm());
+                solrInputDocument.addField(TEMPORARY_ITEM_TYPE_CODE_VALUE_SEARCH, tempItemTypeRecord.getItmTypCd());
+                solrInputDocument.addField(TEMPORARY_ITEM_TYPE_FULL_VALUE_DISPLAY, tempItemTypeRecord.getItmTypNm());
+                solrInputDocument.addField(TEMPORARY_ITEM_TYPE_CODE_VALUE_DISPLAY, tempItemTypeRecord.getItmTypCd());
             }
 
-            solrInputDocument.addField(ITEM_BARCODE_SEARCH, itemRecord.getBarCode());
-            solrInputDocument.addField(ITEM_BARCODE_DISPLAY, itemRecord.getBarCode());
+            solrInputDocument.addField(ITEM_BARCODE_SEARCH, itemRecord.getBarcode());
+            solrInputDocument.addField(ITEM_BARCODE_DISPLAY, itemRecord.getBarcode());
             solrInputDocument.addField(ITEM_URI_SEARCH, itemRecord.getUri());
             solrInputDocument.addField(ITEM_URI_DISPLAY, itemRecord.getUri());
 
@@ -273,53 +276,58 @@ public abstract class ItemIndexer extends OleDsNgIndexer {
             if (CollectionUtils.isNotEmpty(itemStatisticalSearchRecords)) {
                 for (Iterator<ItemStatisticalSearchRecord> iterator = itemStatisticalSearchRecords.iterator(); iterator.hasNext(); ) {
                     ItemStatisticalSearchRecord itemStatisticalSearchRecord = iterator.next();
-                    if (null != itemStatisticalSearchRecord && null != itemStatisticalSearchRecord.getStatisticalSearchRecord()) {
-                        solrInputDocument.addField(STATISTICAL_SEARCHING_CODE_VALUE_SEARCH, itemStatisticalSearchRecord.getStatisticalSearchRecord().getCode());
-                        solrInputDocument.addField(STATISTICAL_SEARCHING_CODE_VALUE_DISPLAY, itemStatisticalSearchRecord.getStatisticalSearchRecord().getCode());
-                        solrInputDocument.addField(STATISTICAL_SEARCHING_FULL_VALUE_SEARCH, itemStatisticalSearchRecord.getStatisticalSearchRecord().getName());
-                        solrInputDocument.addField(STATISTICAL_SEARCHING_FULL_VALUE_DISPLAY, itemStatisticalSearchRecord.getStatisticalSearchRecord().getName());
+                    if (null != itemStatisticalSearchRecord) {
+                        StatisticalSearchRecord statisticalSearchRecord = getOleMemorizeService().getStatisticalSearchRecordById(getLongValue(itemStatisticalSearchRecord.getStatSearchCodeId()));
+                        if(null != statisticalSearchRecord){
+                            solrInputDocument.addField(STATISTICAL_SEARCHING_CODE_VALUE_SEARCH, statisticalSearchRecord.getStatSrchCd());
+                            solrInputDocument.addField(STATISTICAL_SEARCHING_CODE_VALUE_DISPLAY, statisticalSearchRecord.getStatSrchCd());
+                            solrInputDocument.addField(STATISTICAL_SEARCHING_FULL_VALUE_SEARCH, statisticalSearchRecord.getStatSrchNm());
+                            solrInputDocument.addField(STATISTICAL_SEARCHING_FULL_VALUE_DISPLAY, statisticalSearchRecord.getStatSrchNm());
+
+                        }
                     }
                 }
             }
 
             solrInputDocument.addField(ITEM_IDENTIFIER_DISPLAY, itemIdentifierWithPrefix);
-            solrInputDocument.addField(BARCODE_ARSL_DISPLAY, itemRecord.getBarCodeArsl());
+            solrInputDocument.addField(BARCODE_ARSL_DISPLAY, itemRecord.getBarcodeArsl());
             solrInputDocument.addField(COPY_NUMBER_DISPLAY, itemRecord.getCopyNumber());
-            solrInputDocument.addField(PURCHASE_ORDER_LINE_ITEM_IDENTIFIER_DISPLAY, itemRecord.getPurchaseOrderItemLineId());
+            solrInputDocument.addField(PURCHASE_ORDER_LINE_ITEM_IDENTIFIER_DISPLAY, itemRecord.getPurchaseOrderLineItemId());
             solrInputDocument.addField(VENDOR_LINE_ITEM_IDENTIFIER_DISPLAY, itemRecord.getVendorLineItemId());
             solrInputDocument.addField(ENUMERATION_DISPLAY, itemRecord.getEnumeration());
             solrInputDocument.addField(CHRONOLOGY_DISPLAY, itemRecord.getChronology());
-            solrInputDocument.addField(MISSING_PIECE_FLAG_NOTE_DISPLAY, itemRecord.getMissingPieceFlagNote());
+            solrInputDocument.addField(MISSING_PIECE_FLAG_NOTE_DISPLAY, itemRecord.getMissingPiecesNote());
             solrInputDocument.addField(CLAIMS_RETURNED_NOTE_DISPLAY, itemRecord.getClaimsReturnedNote());
-            solrInputDocument.addField(DAMAGED_ITEM_NOTE_DISPLAY, itemRecord.getDamagedItemNote());
-            solrInputDocument.addField(MISSING_PIECE_FLAG_DISPLAY, itemRecord.getMissingPieceFlagNote());
-            solrInputDocument.addField(CLAIMS_RETURNED_FLAG_DISPLAY, itemRecord.getClaimsReturnedFlag());
-            solrInputDocument.addField(ITEM_DAMAGED_FLAG_DISPLAY, itemRecord.isItemDamagedStatus());
+            solrInputDocument.addField(DAMAGED_ITEM_NOTE_DISPLAY, itemRecord.getItemDamagedNote());
+            solrInputDocument.addField(MISSING_PIECE_FLAG_DISPLAY, itemRecord.getMissingPieces()); // Todo : boolean converter
+            solrInputDocument.addField(CLAIMS_RETURNED_FLAG_DISPLAY, itemRecord.getClaimsReturned()); // Todo : boolean converter
+            solrInputDocument.addField(ITEM_DAMAGED_FLAG_DISPLAY, itemRecord.getItemDamagedStatus()); // Todo : boolean converter
             solrInputDocument.addField(MISSING_PIECE_COUNT_DISPLAY,itemRecord.getMissingPiecesCount());
-            solrInputDocument.addField(NUMBER_OF_PIECES_DISPLAY,itemRecord.getNumberOfPieces());
+            solrInputDocument.addField(NUMBER_OF_PIECES_DISPLAY,itemRecord.getNumPieces());
             solrInputDocument.addField(CREATED_BY,itemRecord.getCreatedBy());
             solrInputDocument.addField(UPDATED_BY,itemRecord.getUpdatedBy());
 
 
 
-            solrInputDocument.setField(DATE_UPDATED, itemRecord.getUpdatedDate());
-            solrInputDocument.setField(DATE_ENTERED, itemRecord.getCreatedDate());
+            solrInputDocument.setField(DATE_UPDATED, itemRecord.getDateUpdated());
+            solrInputDocument.setField(DATE_ENTERED, itemRecord.getDateCreated());
 
-            List<OLEItemDonorRecord> itemDonorRecords = itemRecord.getDonorList();
+            List<OLEItemDonorRecord> itemDonorRecords = itemRecord.getOleItemDonorRecords();
             if (CollectionUtils.isNotEmpty(itemDonorRecords)) {
                 for (Iterator<OLEItemDonorRecord> iterator = itemDonorRecords.iterator(); iterator.hasNext(); ) {
                     OLEItemDonorRecord itemDonorRecord = iterator.next();
                     solrInputDocument.addField(DONOR_CODE_SEARCH, itemDonorRecord.getDonorCode());
                     solrInputDocument.addField(DONOR_CODE_DISPLAY, itemDonorRecord.getDonorCode());
-                    solrInputDocument.addField(DONOR_PUBLIC_DISPLAY, itemDonorRecord.getDonorPublicDisplay());
+                    solrInputDocument.addField(DONOR_PUBLIC_DISPLAY, itemDonorRecord.getDonorDisplayNote());
                     solrInputDocument.addField(DONOR_NOTE_DISPLAY, itemDonorRecord.getDonorNote());
                 }
             }
-            if (itemRecord.getHighDensityStorageRecord() != null) {
-                solrInputDocument.addField(HIGHDENSITYSTORAGE_ROW_DISPLAY, itemRecord.getHighDensityStorageRecord().getRow());
-                solrInputDocument.addField(HIGHDENSITYSTORAGE_MODULE_DISPLAY, itemRecord.getHighDensityStorageRecord().getModule());
-                solrInputDocument.addField(HIGHDENSITYSTORAGE_SHELF_DISPLAY, itemRecord.getHighDensityStorageRecord().getShelf());
-                solrInputDocument.addField(HIGHDENSITYSTORAGE_TRAY_DISPLAY, itemRecord.getHighDensityStorageRecord().getTray());
+            HighDensityStorageRecord highDensityStorageRecord = itemRecord.getHighDensityStorageRecord();
+            if (highDensityStorageRecord != null) {
+                solrInputDocument.addField(HIGHDENSITYSTORAGE_ROW_DISPLAY, highDensityStorageRecord.getHighDensityRow());
+                solrInputDocument.addField(HIGHDENSITYSTORAGE_MODULE_DISPLAY,  highDensityStorageRecord.getHighDensityModule());
+                solrInputDocument.addField(HIGHDENSITYSTORAGE_SHELF_DISPLAY,  highDensityStorageRecord.getHighDensityShelf());
+                solrInputDocument.addField(HIGHDENSITYSTORAGE_TRAY_DISPLAY,  highDensityStorageRecord.getHighDensityTray());
             }
             List<ItemNoteRecord> itemNoteRecords = itemRecord.getItemNoteRecords();
             if (CollectionUtils.isNotEmpty(itemNoteRecords)) {
@@ -329,7 +337,7 @@ public abstract class ItemIndexer extends OleDsNgIndexer {
                     solrInputDocument.addField(ITEMNOTE_TYPE_DISPLAY, oleDsItemNitemNoteRecordteT.getType());
                 }
             }
-            solrInputDocument.addField(NUMBER_OF_RENEW, itemRecord.getNumberOfRenew());
+            solrInputDocument.addField(NUMBER_OF_RENEW, itemRecord.getNumOfRenew());
             solrInputDocument.addField(UNIQUE_ID, itemIdentifierWithPrefix);
 
             //Todo : Need to do the all text part
@@ -341,7 +349,8 @@ public abstract class ItemIndexer extends OleDsNgIndexer {
             throw new DocstoreIndexException(e.getMessage());
         }
 
-        return solrInputDocument;
+
+        return new SolrInputDocumentAndDocumentMap(solrInputDocument, parameterMap);
     }
 
     private SolrInputDocument addItemDetailsToBib(SolrInputDocument solrInputDocument, SolrInputDocument destinationSolrInputDocument) {
@@ -368,33 +377,33 @@ public abstract class ItemIndexer extends OleDsNgIndexer {
         String copyNumber = itemRecord.getCopyNumber();
         String enumeration = itemRecord.getEnumeration();
         // String analytic = itemRecord.getAnalytic(); // Todo : Need to check
-        String barcodeARSL = itemRecord.getBarCodeArsl();
+        String barcodeARSL = itemRecord.getBarcodeArsl();
         String chronology = itemRecord.getChronology();
         String checkinNote = itemRecord.getCheckInNote();
-        Date claimsReturnedDateCreated = itemRecord.getClaimsReturnedFlagCreateDate();
+        Date claimsReturnedDateCreated = itemRecord.getClaimsReturnedDateCreated();
         String claimsReturnedFlagCreateDate = convertDateToString(DOCSTORE_DATE_FORMAT, claimsReturnedDateCreated);
         String claimsReturnedNote = itemRecord.getClaimsReturnedNote();
         //String copyNumberLabel = itemRecord.getCopyNumberLabel(); // TODO : Need to check
         String currentBorrower = itemRecord.getCurrentBorrower();
-        String damagedItemNote = itemRecord.getDamagedItemNote();
+        String damagedItemNote = itemRecord.getItemDamagedNote();
 
         String dueDateTime = convertDateToString(DOCSTORE_DATE_FORMAT, itemRecord.getDueDateTime());
 
         String fund = itemRecord.getFund();
 
-        Date itemStatusDateUpdated = itemRecord.getUpdatedDate();
+        Date itemStatusDateUpdated = itemRecord.getDateUpdated();
         String itemStatusEffectiveDate = convertDateToString(DOCSTORE_DATE_FORMAT, itemStatusDateUpdated);
 
 
-        Date missingPiecesEffectiveDate = itemRecord.getMissingPieceEffectiveDate();
+        Date missingPiecesEffectiveDate = itemRecord.getMissingPiecesEffectiveDate();
         String missingPieceEffectiveDate = convertDateToString(DOCSTORE_DATE_FORMAT, missingPiecesEffectiveDate);
 
-        String missingPieceFlagNote = itemRecord.getMissingPieceFlagNote();
+        String missingPieceFlagNote = itemRecord.getMissingPiecesNote();
         String missingPiecesCount = String.valueOf(itemRecord.getMissingPiecesCount());
-        String numberOfPieces = itemRecord.getNumberOfPieces();
+        String numberOfPieces = itemRecord.getNumPieces();
         String price = String.valueOf(itemRecord.getPrice());
         String proxyBorrower = itemRecord.getProxyBorrower();
-        String purchaseOrderLineItemIdentifier = itemRecord.getPurchaseOrderItemLineId();
+        String purchaseOrderLineItemIdentifier = itemRecord.getPurchaseOrderLineItemId();
         String vendorLineItemIdentifier = itemRecord.getVendorLineItemId();
         // String volumeNumber = itemRecord.getVolumeNumber();  // TODO : Need to check
 
@@ -424,27 +433,28 @@ public abstract class ItemIndexer extends OleDsNgIndexer {
         //appendData(sb, volumeNumber);
 
         // TODO :  Need to write boolean converter for JPA and need to change the variable type to boolean
-       *//* boolean staffOnlyFlag = itemRecord.isStaffOnlyFlag();
-        boolean claimsReturnedFlag = itemRecord.isClaimsReturnedFlag();
-        boolean fastAddFlag = itemRecord.isFastAddFlag();
-        boolean itemDamagedStatus = itemRecord.isItemDamagedStatus();
-        boolean missingPieceFlag = itemRecord.isMissingPieceFlag();
+        boolean staffOnlyFlag = getBooleanValueYorN(itemRecord.getStaffOnly());
+        boolean claimsReturnedFlag = getBooleanValueYorN(itemRecord.getClaimsReturned()); //Todo : boolean converter
+        boolean fastAddFlag = getBooleanValueYorN(itemRecord.getFastAdd()); //Todo : boolean converter
+        boolean itemDamagedStatus = getBooleanValueYorN(itemRecord.getItemDamagedStatus()); //Todo : boolean converter
+        boolean missingPieceFlag = getBooleanValueYorN(itemRecord.getMissingPieces()); //Todo : boolean converter
 
         appendData(sb, String.valueOf(staffOnlyFlag));
         appendData(sb, String.valueOf(claimsReturnedFlag));
         appendData(sb, String.valueOf(fastAddFlag));
         appendData(sb, String.valueOf(itemDamagedStatus));
-        appendData(sb, String.valueOf(missingPieceFlag));*//*
+        appendData(sb, String.valueOf(missingPieceFlag));
 
-        appendData(sb, itemRecord.getBarCode());
+        appendData(sb, itemRecord.getBarcode());
         appendData(sb, itemRecord.getUri());
 
         if (StringUtils.isNotEmpty(itemRecord.getCallNumber())) {
             String number = itemRecord.getCallNumber();
             String prefix = itemRecord.getCallNumberPrefix();
-            if (itemRecord.getCallNumberTypeRecord() != null) {
-                String shelvingSchemeCodeValue = itemRecord.getCallNumberTypeRecord().getCode();
-                String shelvingSchemeFullValue = itemRecord.getCallNumberTypeRecord().getName();
+            CallNumberTypeRecord callNumberTypeRecord = getOleMemorizeService().getCallNumberTypeRecordById(getLongValue(itemRecord.getCallNumberTypeId()));
+            if (callNumberTypeRecord != null) {
+                String shelvingSchemeCodeValue = callNumberTypeRecord.getShvlgSchmCd();
+                String shelvingSchemeFullValue = callNumberTypeRecord.getShvlgSchmNm();
 
                 appendData(sb, shelvingSchemeCodeValue);
                 appendData(sb, shelvingSchemeFullValue);
@@ -461,14 +471,14 @@ public abstract class ItemIndexer extends OleDsNgIndexer {
         }
 
 
-        List<OLEItemDonorRecord> donorList = itemRecord.getDonorList();
+        List<OLEItemDonorRecord> donorList = itemRecord.getOleItemDonorRecords();
         if (CollectionUtils.isNotEmpty(donorList)) {
             for (Iterator<OLEItemDonorRecord> iterator = donorList.iterator(); iterator.hasNext(); ) {
                 OLEItemDonorRecord oleItemDonorRecord = iterator.next();
                 if(null != oleItemDonorRecord) {
                     String donorCode = oleItemDonorRecord.getDonorCode();
                     String donorNote = oleItemDonorRecord.getDonorNote();
-                    String donorPublicDisplay = oleItemDonorRecord.getDonorPublicDisplay();
+                    String donorPublicDisplay = oleItemDonorRecord.getDonorDisplayNote();
                     appendData(sb, donorCode);
                     appendData(sb, donorNote);
                     appendData(sb, donorPublicDisplay);
@@ -492,28 +502,28 @@ public abstract class ItemIndexer extends OleDsNgIndexer {
 
         HighDensityStorageRecord highDensityStorageRecord = itemRecord.getHighDensityStorageRecord();
         if (highDensityStorageRecord != null) {
-            String module = highDensityStorageRecord.getModule();
-            String row = highDensityStorageRecord.getRow();
-            String shelf = highDensityStorageRecord.getShelf();
-            String tray = highDensityStorageRecord.getTray();
+            String module = highDensityStorageRecord.getHighDensityModule();
+            String row = highDensityStorageRecord.getHighDensityRow();
+            String shelf = highDensityStorageRecord.getHighDensityShelf();
+            String tray = highDensityStorageRecord.getHighDensityTray();
             appendData(sb, module);
             appendData(sb, row);
             appendData(sb, shelf);
             appendData(sb, tray);
         }
 
-        ItemStatusRecord itemStatusRecord = itemRecord.getItemStatusRecord();
-        if(itemStatusRecord != null) {
-            String itemStatusCodeValue = itemStatusRecord.getCode();
-            String itemStatusFullValue = itemStatusRecord.getName();
+        ItemStatusRecord itemStatusRecord = getOleMemorizeService().getItemStatusById(getStringValue(itemRecord.getItemStatusId()));
+        if (itemStatusRecord != null) {
+            String itemStatusCodeValue = itemStatusRecord.getItemAvailStatCd();
+            String itemStatusFullValue = itemStatusRecord.getItemAvailStatNm();
             appendData(sb, itemStatusCodeValue);
             appendData(sb, itemStatusFullValue);
         }
 
-        ItemTypeRecord itemTypeRecord = itemRecord.getItemTypeRecord();
-        if(itemTypeRecord != null) {
-            String itemTypeCodeValue = itemTypeRecord.getCode();
-            String itemTypeFullValue = itemTypeRecord.getName();
+        ItemTypeRecord itemTypeRecord = getOleMemorizeService().getItemTypeById(getStringValue(itemRecord.getItemTypeId()));
+        if (itemTypeRecord != null) {
+            String itemTypeCodeValue = itemTypeRecord.getItmTypCd();
+            String itemTypeFullValue = itemTypeRecord.getItmTypNm();
             appendData(sb, itemTypeCodeValue);
             appendData(sb, itemTypeFullValue);
         }
@@ -537,7 +547,7 @@ public abstract class ItemIndexer extends OleDsNgIndexer {
                     Integer locationCount = locationsCheckinCountRecord.getLocationCount();
                     String checkInLocationCount = (null != locationCount ? locationCount.toString() : "0");
                     appendData(sb, checkInLocationCount);
-                    Integer locationInhouseCount = locationsCheckinCountRecord.getLocationInhouseCount();
+                    Integer locationInhouseCount = locationsCheckinCountRecord.getLocationInHouseCount();
                     String checkInLocationInHouseCount = (null != locationInhouseCount ? locationInhouseCount.toString() : "0");
                     appendData(sb, checkInLocationInHouseCount);
                     String checkInLocationName = locationsCheckinCountRecord.getLocationName();
@@ -550,19 +560,22 @@ public abstract class ItemIndexer extends OleDsNgIndexer {
         if (CollectionUtils.isNotEmpty(itemStatisticalSearchRecords)) {
             for (Iterator<ItemStatisticalSearchRecord> iterator = itemStatisticalSearchRecords.iterator(); iterator.hasNext(); ) {
                 ItemStatisticalSearchRecord itemStatisticalSearchRecord = iterator.next();
-                if(null != itemStatisticalSearchRecord && null != itemStatisticalSearchRecord.getStatisticalSearchRecord()) {
-                    String codeValue = itemStatisticalSearchRecord.getStatisticalSearchRecord().getCode();
-                    appendData(sb, codeValue);
-                    String fullValue = itemStatisticalSearchRecord.getStatisticalSearchRecord().getName();
-                    appendData(sb, fullValue);
+                if (null != itemStatisticalSearchRecord) {
+                    StatisticalSearchRecord statisticalSearchRecord = getOleMemorizeService().getStatisticalSearchRecordById(getLongValue(itemStatisticalSearchRecord.getStatSearchCodeId()));
+                    if(null != statisticalSearchRecord){
+                        String codeValue = statisticalSearchRecord.getStatSrchCd();
+                        appendData(sb, codeValue);
+                        String fullValue = statisticalSearchRecord.getStatSrchNm();
+                        appendData(sb, fullValue);
+                    }
                 }
             }
         }
 
-        ItemTypeRecord itemTempTypeRecord = itemRecord.getItemTempTypeRecord();
-        if (itemTempTypeRecord != null) {
-            String temporaryItemTypeCodeValue = itemTempTypeRecord.getCode();
-            String temporaryItemTypeFullValue = itemTempTypeRecord.getName();
+        ItemTypeRecord tempItemTypeRecord = getOleMemorizeService().getItemTypeById(getStringValue(itemRecord.getTempItemTypeId()));
+        if (tempItemTypeRecord != null) {
+            String temporaryItemTypeCodeValue = tempItemTypeRecord.getItmTypCd();
+            String temporaryItemTypeFullValue = tempItemTypeRecord.getItmTypNm();
             appendData(sb, temporaryItemTypeCodeValue);
             appendData(sb, temporaryItemTypeFullValue);
         }
@@ -570,5 +583,7 @@ public abstract class ItemIndexer extends OleDsNgIndexer {
         appendData(sb,itemRecord.getLocationLevel());
         return sb.toString();
 
-    }*/
+    }
+
+
 }

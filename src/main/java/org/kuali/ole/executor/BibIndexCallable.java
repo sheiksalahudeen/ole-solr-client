@@ -4,7 +4,7 @@ import org.apache.camel.ProducerTemplate;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.apache.solr.common.SolrInputDocument;
 import org.kuali.ole.common.marc.xstream.BibMarcRecordProcessor;
-import org.kuali.ole.indexer.BibIndexingTxObject;
+import org.kuali.ole.dao.OleMemorizeService;
 import org.kuali.ole.model.jpa.BibRecord;
 import org.kuali.ole.repo.BibRecordRepository;
 import org.kuali.ole.util.HelperUtil;
@@ -39,13 +39,15 @@ public class BibIndexCallable implements Callable {
     private Map<String, String> fieldsToTags2ExcludeMap = new HashMap<>();
     private ProducerTemplate producerTemplate;
     private SolrTemplate solrTemplate;
+    private OleMemorizeService oleMemorizeService;
 
     public BibIndexCallable(String solrURL, String coreName, int pageNum, int docsPerPage,
                             BibMarcRecordProcessor bibMarcRecordProcessor,
                             Map<String, String> fieldsToTags2IncludeMap,
                             Map<String, String> fieldsToTags2ExcludeMap,
                             ProducerTemplate producerTemplate,
-                            SolrTemplate solrTemplate) {
+                            SolrTemplate solrTemplate,
+                            OleMemorizeService oleMemorizeService) {
         this.pageNum = pageNum;
         this.docsPerPage = docsPerPage;
         this.coreName = coreName;
@@ -55,6 +57,7 @@ public class BibIndexCallable implements Callable {
         this.fieldsToTags2ExcludeMap.putAll(fieldsToTags2ExcludeMap);
         this.producerTemplate = producerTemplate;
         this.solrTemplate = solrTemplate;
+        this.oleMemorizeService = oleMemorizeService;
     }
 
     @Override
@@ -79,7 +82,7 @@ public class BibIndexCallable implements Callable {
             Future submit = executorService.submit(new BibRecordSetupCallable(bibRecord,
                     bibMarcRecordProcessor,
                     fieldsToTags2IncludeMap, fieldsToTags2ExcludeMap,
-                    producerTemplate));
+                    producerTemplate, oleMemorizeService));
 //            Future submit = executorService.submit(new BibItemRecordSetupCallable(bibRecord, solrTemplate, bibliographicDetailsRepository, holdingsDetailsRepository, producerTemplate));
             futures.add(submit);
         }

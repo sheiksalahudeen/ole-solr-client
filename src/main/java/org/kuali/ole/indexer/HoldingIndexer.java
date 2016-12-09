@@ -26,7 +26,6 @@ public class HoldingIndexer extends OleDsNgIndexer {
 
     private static final Logger LOG = LoggerFactory.getLogger(HoldingIndexer.class);
 
-    private OleMemorizeService oleMemorizeService;
 
     @Override
     public void indexDocument(Object object) {
@@ -54,6 +53,7 @@ public class HoldingIndexer extends OleDsNgIndexer {
     public Map<String,SolrInputDocument> getInputDocumentForHoldings(HoldingsRecord holdingsRecord, Map parameterMap) {
         SolrInputDocumentAndDocumentMap solrInputDocumentAndDocumentMap = buildSolrInputDocument(holdingsRecord, parameterMap);
         SolrInputDocument holdingsSolrInputDocument = solrInputDocumentAndDocumentMap.getSolrInputDocument();
+        parameterMap = solrInputDocumentAndDocumentMap.getMap();
 
         Date date = new Date();
         holdingsSolrInputDocument.addField(UPDATED_BY, holdingsRecord.getUpdatedBy());
@@ -76,18 +76,19 @@ public class HoldingIndexer extends OleDsNgIndexer {
             addSolrInputDocumentToMap(parameterMap,bibSolrInputDocument);
         }
         addSolrInputDocumentToMap(parameterMap,holdingsSolrInputDocument);
-       /* List<ItemRecord> itemRecords = holdingsRecord.getItemRecords();
+        List<ItemRecord> itemRecords = holdingsRecord.getItemRecords();
         List<String> itemUUIds = new ArrayList<String>();
         if(CollectionUtils.isNotEmpty(itemRecords)){
             for (Iterator<ItemRecord> iterator = itemRecords.iterator(); iterator.hasNext(); ) {
                 ItemRecord itemRecord = iterator.next();
                 ItemIndexer itemIndexer = new ItemIndexer();
+                itemIndexer.setOleMemorizeService(getOleMemorizeService());
                 //Todo : Need to do for Item.
                 parameterMap = itemIndexer.getInputDocumentForItem(itemRecord, parameterMap);
                 String itemIdentifierWithPrefix = DocumentUniqueIDPrefix.getPrefixedId(DocumentUniqueIDPrefix.PREFIX_WORK_ITEM_OLEML, String.valueOf(itemRecord.getItemId()));
                 itemUUIds.add(itemIdentifierWithPrefix);
             }
-        }*/
+        }
         return parameterMap;
     }
 
@@ -548,20 +549,6 @@ public class HoldingIndexer extends OleDsNgIndexer {
         return sb.toString();
     }
 
-    private Long getLongValue(Integer value) {
-        if(null == value) {
-            return null;
-        }
-        return Long.valueOf(value);
-    }
-
-    private String getStringValue(Integer value) {
-        if(null == value) {
-            return null;
-        }
-        return String.valueOf(value);
-    }
-
     private SolrInputDocument addHoldingsDetailsToBib(SolrInputDocument sourceSolrInputDocument, SolrInputDocument destinationSolrInputDocument) {
 
         if(null != destinationSolrInputDocument) {
@@ -570,16 +557,5 @@ public class HoldingIndexer extends OleDsNgIndexer {
             return destinationSolrInputDocument;
         }
         return null;
-    }
-
-    public OleMemorizeService getOleMemorizeService() {
-        if(null == oleMemorizeService) {
-            oleMemorizeService = HelperUtil.getBean(OleMemorizeService.class);
-        }
-        return oleMemorizeService;
-    }
-
-    public void setOleMemorizeService(OleMemorizeService oleMemorizeService) {
-        this.oleMemorizeService = oleMemorizeService;
     }
 }

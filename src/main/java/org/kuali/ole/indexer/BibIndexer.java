@@ -94,7 +94,9 @@ public class BibIndexer extends OleDsNgIndexer {
                 String holdingsIdentifierWithPrefix = DocumentUniqueIDPrefix.getPrefixedId(DocumentUniqueIDPrefix.PREFIX_WORK_HOLDINGS_OLEML, String.valueOf(holdingsRecord.getHoldingsId()));
                 bibSolrInputDocument.addField(HOLDINGS_IDENTIFIER,holdingsIdentifierWithPrefix);
                 // Todo : Need to do for Holdings
-                parameterMap = new HoldingIndexer().getInputDocumentForHoldings(holdingsRecord,parameterMap);
+                HoldingIndexer holdingIndexer = new HoldingIndexer();
+                holdingIndexer.setOleMemorizeService(getOleMemorizeService());
+                parameterMap = holdingIndexer.getInputDocumentForHoldings(holdingsRecord,parameterMap);
                 processed++;
             }
 //            updatedHoldingsFetProcessedCount(processed, updateCount);

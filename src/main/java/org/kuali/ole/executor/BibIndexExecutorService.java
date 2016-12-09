@@ -2,15 +2,14 @@ package org.kuali.ole.executor;
 
 import com.google.common.collect.Lists;
 import org.apache.camel.ProducerTemplate;
-import org.apache.solr.client.solrj.SolrServerException;
 import org.kuali.ole.common.DocumentSearchConfig;
 import org.kuali.ole.common.marc.xstream.BibMarcRecordProcessor;
+import org.kuali.ole.dao.OleMemorizeService;
 import org.kuali.ole.repo.BibRecordRepository;
 import org.kuali.ole.repo.solr.BibCrudRepositoryMultiCoreSupport;
 import org.kuali.ole.request.FullIndexRequest;
 import org.kuali.ole.response.FullIndexStatus;
 import org.kuali.ole.service.SolrAdmin;
-import org.kuali.ole.util.HelperUtil;
 import org.kuali.ole.util.SolrCommitScheduler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,7 +20,6 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StopWatch;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
@@ -55,6 +53,10 @@ public class BibIndexExecutorService {
 
     @Autowired
     SolrTemplate solrTemplate;
+
+    @Autowired
+    OleMemorizeService oleMemorizeService;
+
     private BibMarcRecordProcessor bibMarcRecordProcessor;
 
     @Async
@@ -104,7 +106,7 @@ public class BibIndexExecutorService {
                             getBibMarcRecordProcessor(),
                             documentSearchConfig.FIELDS_TO_TAGS_2_INCLUDE_MAP,
                             documentSearchConfig.FIELDS_TO_TAGS_2_EXCLUDE_MAP,
-                            producerTemplate,solrTemplate);
+                            producerTemplate,solrTemplate, oleMemorizeService);
                     callables.add(callable);
                     coreNum = coreNum < numThreads - 1 ? coreNum + 1 : 0;
                 }

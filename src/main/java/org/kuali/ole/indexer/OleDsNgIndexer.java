@@ -7,13 +7,9 @@ import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
 import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.common.SolrInputField;
-//import org.kuali.incubator.SolrRequestReponseHandler;
-import org.kuali.ole.Constants;
+import org.kuali.ole.dao.OleMemorizeService;
+import org.kuali.ole.util.HelperUtil;
 import org.kuali.ole.util.MarcUtil;
-/*import org.kuali.ole.constants.OleNGConstants;
-import org.kuali.ole.docstore.common.constants.DocstoreConstants;
-import org.kuali.ole.docstore.indexer.solr.DocumentLocalId;
-import org.kuali.ole.dsng.util.OleDsHelperUtil;*/
 
 import java.text.DateFormat;
 import java.util.*;
@@ -25,6 +21,7 @@ public abstract class OleDsNgIndexer extends MarcUtil {
 
     private SolrRequestReponseHandler solrRequestReponseHandler;
     public static final String ID_FIELD_PREFIX = "id_disc_";
+    private OleMemorizeService oleMemorizeService;
 //    private OleDsHelperUtil oleDsHelperUtil;
 
     public abstract void indexDocument(Object object);
@@ -356,5 +353,38 @@ public abstract class OleDsNgIndexer extends MarcUtil {
             }
         }
         return null;
+    }
+
+    public Long getLongValue(Integer value) {
+        if(null == value) {
+            return null;
+        }
+        return Long.valueOf(value);
+    }
+
+    public String getStringValue(Integer value) {
+        if(null == value) {
+            return null;
+        }
+        return String.valueOf(value);
+    }
+
+    public boolean getBooleanValueYorN(String value) {
+        if(null == value) {
+            return false;
+        }
+        return value.equalsIgnoreCase("Y") ? true : false;
+    }
+
+    public OleMemorizeService getOleMemorizeService() {
+        if(null == oleMemorizeService) {
+            System.out.println("********* Memoize Reinitialize ********* ");
+            oleMemorizeService = HelperUtil.getBean(OleMemorizeService.class);
+        }
+        return oleMemorizeService;
+    }
+
+    public void setOleMemorizeService(OleMemorizeService oleMemorizeService) {
+        this.oleMemorizeService = oleMemorizeService;
     }
 }

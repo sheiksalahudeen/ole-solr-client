@@ -10,6 +10,7 @@ import org.apache.solr.common.SolrInputField;
 import org.kuali.ole.dao.OleMemorizeService;
 import org.kuali.ole.util.HelperUtil;
 import org.kuali.ole.util.MarcUtil;
+import org.kuali.ole.util.ReportUtil;
 
 import java.text.DateFormat;
 import java.util.*;
@@ -22,6 +23,7 @@ public abstract class OleDsNgIndexer extends MarcUtil {
     private SolrRequestReponseHandler solrRequestReponseHandler;
     public static final String ID_FIELD_PREFIX = "id_disc_";
     private OleMemorizeService oleMemorizeService;
+    protected ReportUtil reportUtil;
 //    private OleDsHelperUtil oleDsHelperUtil;
 
     public abstract void indexDocument(Object object);
@@ -318,9 +320,11 @@ public abstract class OleDsNgIndexer extends MarcUtil {
 
     public List<SolrInputDocument> getSolrInputDocumentListFromMap(Map<String, SolrInputDocument> parameterMap) {
         List<SolrInputDocument> solrInputDocuments = new ArrayList<SolrInputDocument>();
-        for (Iterator<String> iterator = parameterMap.keySet().iterator(); iterator.hasNext(); ) {
-            String key = iterator.next();
-            solrInputDocuments.add(parameterMap.get(key));
+        if (null != parameterMap) {
+            for (Iterator<String> iterator = parameterMap.keySet().iterator(); iterator.hasNext(); ) {
+                String key = iterator.next();
+                solrInputDocuments.add(parameterMap.get(key));
+            }
         }
         return solrInputDocuments;
     }
@@ -349,6 +353,7 @@ public abstract class OleDsNgIndexer extends MarcUtil {
             try {
                 return dateFormat.format(date);
             } catch(Exception e) {
+                System.out.println("Problemed DAte : " +date);
                 e.printStackTrace();
             }
         }
@@ -386,5 +391,16 @@ public abstract class OleDsNgIndexer extends MarcUtil {
 
     public void setOleMemorizeService(OleMemorizeService oleMemorizeService) {
         this.oleMemorizeService = oleMemorizeService;
+    }
+
+    public ReportUtil getReportUtil() {
+        if(null ==  reportUtil) {
+            reportUtil = new ReportUtil();
+        }
+        return reportUtil;
+    }
+
+    public void setReportUtil(ReportUtil reportUtil) {
+        this.reportUtil = reportUtil;
     }
 }

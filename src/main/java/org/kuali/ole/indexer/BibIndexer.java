@@ -1,6 +1,5 @@
 package org.kuali.ole.indexer;
 
-import org.apache.camel.ProducerTemplate;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.solr.common.SolrInputDocument;
@@ -16,15 +15,10 @@ import org.kuali.ole.common.marc.xstream.BibMarcRecordProcessor;
 import org.kuali.ole.common.util.ISBNUtil;
 import org.kuali.ole.model.jpa.BibRecord;
 import org.kuali.ole.model.jpa.HoldingsRecord;
-import org.kuali.ole.util.HelperUtil;
-import org.marc4j.marc.Record;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.text.DateFormat;
 import java.text.Normalizer;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -46,7 +40,6 @@ public class BibIndexer extends OleDsNgIndexer {
 
     private BibMarcRecordProcessor bibMarcRecordProcessor;
     private ConfigMaps configMaps;
-    private ProducerTemplate producerTemplate;
 
     public List<SolrInputDocument> prepareSolrInputDocument(BibRecord bibRecord) {
         Map<String, SolrInputDocument> inputDocumentForBib = getInputDocumentForBib(bibRecord, null);
@@ -77,29 +70,35 @@ public class BibIndexer extends OleDsNgIndexer {
     }
 
     public Map<String,SolrInputDocument> getInputDocumentForBib(BibRecord bibRecord, Map parameterMap) {
-        SolrInputDocumentAndDocumentMap solrInputDocumentAndDocumentMap = buildSolrInputDocument(bibRecord, parameterMap);
-        SolrInputDocument bibSolrInputDocument = solrInputDocumentAndDocumentMap.getSolrInputDocument();
-        parameterMap = solrInputDocumentAndDocumentMap.getMap();
-        setCommonFields(bibRecord,bibSolrInputDocument);
-        if (null != bibRecord.getStatusUpdatedDate()) {
-            bibSolrInputDocument.setField(STATUS_UPDATED_ON, getDate(bibRecord.getStatusUpdatedDate().toString()));
-        }
-
-        List<HoldingsRecord> holdingsRecords = bibRecord.getHoldingsRecords();
-        if(CollectionUtils.isNotEmpty(holdingsRecords)) {
-//            updatedHoldingsFetchedCount(holdingsRecords.size(), updateCount);
-            int processed = 0;
-            for (Iterator<HoldingsRecord> iterator = holdingsRecords.iterator(); iterator.hasNext(); ) {
-                HoldingsRecord holdingsRecord = iterator.next();
-                String holdingsIdentifierWithPrefix = DocumentUniqueIDPrefix.getPrefixedId(DocumentUniqueIDPrefix.PREFIX_WORK_HOLDINGS_OLEML, String.valueOf(holdingsRecord.getHoldingsId()));
-                bibSolrInputDocument.addField(HOLDINGS_IDENTIFIER,holdingsIdentifierWithPrefix);
-                // Todo : Need to do for Holdings
-                HoldingIndexer holdingIndexer = new HoldingIndexer();
-                holdingIndexer.setOleMemorizeService(getOleMemorizeService());
-                parameterMap = holdingIndexer.getInputDocumentForHoldings(holdingsRecord,parameterMap);
-                processed++;
+        try {
+            SolrInputDocumentAndDocumentMap solrInputDocumentAndDocumentMap = buildSolrInputDocument(bibRecord, parameterMap);
+            SolrInputDocument bibSolrInputDocument = solrInputDocumentAndDocumentMap.getSolrInputDocument();
+            parameterMap = solrInputDocumentAndDocumentMap.getMap();
+            setCommonFields(bibRecord,bibSolrInputDocument);
+            if (null != bibRecord.getStatusUpdatedDate()) {
+                bibSolrInputDocument.setField(STATUS_UPDATED_ON, bibRecord.getStatusUpdatedDate());
             }
-//            updatedHoldingsFetProcessedCount(processed, updateCount);
+
+            List<HoldingsRecord> holdingsRecords = bibRecord.getHoldingsRecords();
+            if(CollectionUtils.isNotEmpty(holdingsRecords)) {
+    //            updatedHoldingsFetchedCount(holdingsRecords.size(), updateCount);
+                int processed = 0;
+                for (Iterator<HoldingsRecord> iterator = holdingsRecords.iterator(); iterator.hasNext(); ) {
+                    HoldingsRecord holdingsRecord = iterator.next();
+                    String holdingsIdentifierWithPrefix = DocumentUniqueIDPrefix.getPrefixedId(DocumentUniqueIDPrefix.PREFIX_WORK_HOLDINGS_OLEML, String.valueOf(holdingsRecord.getHoldingsId()));
+                    bibSolrInputDocument.addField(HOLDINGS_IDENTIFIER,holdingsIdentifierWithPrefix);
+                    // Todo : Need to do for Holdings
+                    HoldingIndexer holdingIndexer = new HoldingIndexer();
+                    holdingIndexer.setReportUtil(getReportUtil());
+                    holdingIndexer.setOleMemorizeService(getOleMemorizeService());
+                    parameterMap = holdingIndexer.getInputDocumentForHoldings(holdingsRecord,parameterMap);
+                    processed++;
+                }
+    //            updatedHoldingsFetProcessedCount(processed, updateCount);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            reportUtil.saveExceptionReportForBib(bibRecord, e);
         }
 
         return parameterMap;
@@ -108,8 +107,8 @@ public class BibIndexer extends OleDsNgIndexer {
     @Override
     public SolrInputDocumentAndDocumentMap buildSolrInputDocument(Object object, Map<String,SolrInputDocument> parameterMap) {
         SolrInputDocument solrInputDocument = null;
+        BibRecord bibRecord = (BibRecord) object;
         try {
-            BibRecord bibRecord = (BibRecord) object;
             BibMarcRecords bibMarcRecords = getBibMarcRecordProcessor().fromXML(bibRecord.getContent());
             solrInputDocument = buildSolrInputDocumentWithBibMarcRecord(bibMarcRecords.getRecords().get(0));
 
@@ -174,7 +173,7 @@ public class BibIndexer extends OleDsNgIndexer {
         solrInputDocument.setField(STATUS_DISPLAY, bibRecord.getStatus());
 
         if (null != bibRecord.getStatusUpdatedDate()) {
-            solrInputDocument.setField(STATUS_UPDATED_ON, getDate(bibRecord.getStatusUpdatedDate().toString()));
+            solrInputDocument.setField(STATUS_UPDATED_ON, bibRecord.getStatusUpdatedDate().toString());
         }
 
         solrInputDocument.setField(STAFF_ONLY_FLAG, bibRecord.getStaffOnly());
@@ -187,14 +186,14 @@ public class BibIndexer extends OleDsNgIndexer {
         Date createdDate = null;
 
         if (null != bibRecord.getDateCreated()) {
-            createdDate = getDate(bibRecord.getDateCreated().toString());
+            createdDate = bibRecord.getDateCreated();
             solrInputDocument.setField(DATE_ENTERED, createdDate);
         } else {
             solrInputDocument.setField(DATE_ENTERED, date);
         }
 
         if (null != bibRecord.getStatusUpdatedDate()) {
-            solrInputDocument.setField(DATE_UPDATED, getDate(bibRecord.getStatusUpdatedDate().toString()));
+            solrInputDocument.setField(DATE_UPDATED, bibRecord.getStatusUpdatedDate());
         } else {
             if (null != bibRecord.getDateCreated()) {
                 // Updated date will have created date value when bib is not updated after it is created.
@@ -202,22 +201,6 @@ public class BibIndexer extends OleDsNgIndexer {
             } else {
                 solrInputDocument.setField(DATE_UPDATED, date);
             }
-        }
-    }
-
-
-    private Date getDate(String dateStr) {
-        DateFormat format = new SimpleDateFormat(DATE_FORMAT);
-        try {
-            if (StringUtils.isNotEmpty(dateStr)) {
-                return format.parse(dateStr);
-            } else {
-                return new Date();
-            }
-
-        } catch (ParseException e) {
-            LOG.info("Exception : " + dateStr + " for format:: " + DATE_FORMAT, e);
-            return new Date();
         }
     }
 
@@ -953,14 +936,4 @@ public class BibIndexer extends OleDsNgIndexer {
         this.configMaps = configMaps;
     }
 
-    public ProducerTemplate getProducerTemplate() {
-        if(null == producerTemplate) {
-            producerTemplate = HelperUtil.getBean(ProducerTemplate.class);
-        }
-        return producerTemplate;
-    }
-
-    public void setProducerTemplate(ProducerTemplate producerTemplate) {
-        this.producerTemplate = producerTemplate;
-    }
 }

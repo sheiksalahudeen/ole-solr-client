@@ -51,43 +51,48 @@ public class HoldingIndexer extends OleDsNgIndexer {
     }
 
     public Map<String,SolrInputDocument> getInputDocumentForHoldings(HoldingsRecord holdingsRecord, Map parameterMap) {
-        SolrInputDocumentAndDocumentMap solrInputDocumentAndDocumentMap = buildSolrInputDocument(holdingsRecord, parameterMap);
-        SolrInputDocument holdingsSolrInputDocument = solrInputDocumentAndDocumentMap.getSolrInputDocument();
-        parameterMap = solrInputDocumentAndDocumentMap.getMap();
+        try {
+            SolrInputDocumentAndDocumentMap solrInputDocumentAndDocumentMap = buildSolrInputDocument(holdingsRecord, parameterMap);
+            SolrInputDocument holdingsSolrInputDocument = solrInputDocumentAndDocumentMap.getSolrInputDocument();
+            parameterMap = solrInputDocumentAndDocumentMap.getMap();
 
-        Date date = new Date();
-        holdingsSolrInputDocument.addField(UPDATED_BY, holdingsRecord.getUpdatedBy());
-        holdingsSolrInputDocument.addField(DATE_UPDATED, date);
-        Integer bibId = holdingsRecord.getBibRecord().getBibId();
-        if(null != bibId){
+            Date date = new Date();
+            holdingsSolrInputDocument.addField(UPDATED_BY, holdingsRecord.getUpdatedBy());
+            holdingsSolrInputDocument.addField(DATE_UPDATED, date);
+            Integer bibId = holdingsRecord.getBibRecord().getBibId();
+            if(null != bibId){
 
-            String bibIdentifierWithPrefix = DocumentUniqueIDPrefix.getPrefixedId(DocumentUniqueIDPrefix.PREFIX_WORK_BIB_MARC, String.valueOf(bibId));
+                String bibIdentifierWithPrefix = DocumentUniqueIDPrefix.getPrefixedId(DocumentUniqueIDPrefix.PREFIX_WORK_BIB_MARC, String.valueOf(bibId));
 
-            SolrInputDocument bibSolrInputDocument = getSolrInputDocumentFromMap(parameterMap,bibIdentifierWithPrefix);
+                SolrInputDocument bibSolrInputDocument = getSolrInputDocumentFromMap(parameterMap,bibIdentifierWithPrefix);
 
-            if(null == bibIdentifierWithPrefix) {
-                // Todo : Need to form solrInputDocument for Bib.
+                if(null == bibIdentifierWithPrefix) {
+                    // Todo : Need to form solrInputDocument for Bib.
+                }
+
+                addBibInfoForHoldingsOrItems(holdingsSolrInputDocument,bibSolrInputDocument);
+                holdingsSolrInputDocument.addField(BIB_IDENTIFIER, bibIdentifierWithPrefix);
+                bibSolrInputDocument = addHoldingsDetailsToBib(holdingsSolrInputDocument,bibSolrInputDocument);
+
+                addSolrInputDocumentToMap(parameterMap,bibSolrInputDocument);
             }
-
-            addBibInfoForHoldingsOrItems(holdingsSolrInputDocument,bibSolrInputDocument);
-            holdingsSolrInputDocument.addField(BIB_IDENTIFIER, bibIdentifierWithPrefix);
-            bibSolrInputDocument = addHoldingsDetailsToBib(holdingsSolrInputDocument,bibSolrInputDocument);
-
-            addSolrInputDocumentToMap(parameterMap,bibSolrInputDocument);
-        }
-        addSolrInputDocumentToMap(parameterMap,holdingsSolrInputDocument);
-        List<ItemRecord> itemRecords = holdingsRecord.getItemRecords();
-        List<String> itemUUIds = new ArrayList<String>();
-        if(CollectionUtils.isNotEmpty(itemRecords)){
-            for (Iterator<ItemRecord> iterator = itemRecords.iterator(); iterator.hasNext(); ) {
-                ItemRecord itemRecord = iterator.next();
-                ItemIndexer itemIndexer = new ItemIndexer();
-                itemIndexer.setOleMemorizeService(getOleMemorizeService());
-                //Todo : Need to do for Item.
-                parameterMap = itemIndexer.getInputDocumentForItem(itemRecord, parameterMap);
-                String itemIdentifierWithPrefix = DocumentUniqueIDPrefix.getPrefixedId(DocumentUniqueIDPrefix.PREFIX_WORK_ITEM_OLEML, String.valueOf(itemRecord.getItemId()));
-                itemUUIds.add(itemIdentifierWithPrefix);
+            addSolrInputDocumentToMap(parameterMap,holdingsSolrInputDocument);
+            List<ItemRecord> itemRecords = holdingsRecord.getItemRecords();
+            List<String> itemUUIds = new ArrayList<String>();
+            if(CollectionUtils.isNotEmpty(itemRecords)){
+                for (Iterator<ItemRecord> iterator = itemRecords.iterator(); iterator.hasNext(); ) {
+                    ItemRecord itemRecord = iterator.next();
+                    ItemIndexer itemIndexer = new ItemIndexer();
+                    itemIndexer.setOleMemorizeService(getOleMemorizeService());
+                    //Todo : Need to do for Item.
+                    parameterMap = itemIndexer.getInputDocumentForItem(itemRecord, parameterMap);
+                    String itemIdentifierWithPrefix = DocumentUniqueIDPrefix.getPrefixedId(DocumentUniqueIDPrefix.PREFIX_WORK_ITEM_OLEML, String.valueOf(itemRecord.getItemId()));
+                    itemUUIds.add(itemIdentifierWithPrefix);
+                }
             }
+        } catch (Exception e) {
+            e.printStackTrace();
+            reportUtil.saveExceptionReportForHoldings(holdingsRecord, e);
         }
         return parameterMap;
     }
@@ -95,8 +100,9 @@ public class HoldingIndexer extends OleDsNgIndexer {
     @Override
     public SolrInputDocumentAndDocumentMap buildSolrInputDocument(Object object, Map parameterMap) {
         SolrInputDocument solrInputDocument = null;
+        HoldingsRecord holdingsRecord = (HoldingsRecord) object;
         try {
-            solrInputDocument = prepareSolrInputDocument((HoldingsRecord) object);
+            solrInputDocument = prepareSolrInputDocument(holdingsRecord);
             assignUUIDs(solrInputDocument);
         } catch (Exception e) {
             LOG.info("Exception :", e);

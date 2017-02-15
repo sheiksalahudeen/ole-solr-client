@@ -6,6 +6,7 @@ import org.kuali.ole.dao.OleMemorizeService;
 import org.kuali.ole.indexer.BibIndexer;
 import org.kuali.ole.indexer.ConfigMaps;
 import org.kuali.ole.model.jpa.BibRecord;
+import org.kuali.ole.util.ReportUtil;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -44,7 +45,8 @@ public class BibRecordSetupCallable implements Callable{
         configMaps.setFIELDS_TO_TAGS_2_INCLUDE_MAP(fieldsToTags2IncludeMap);
         configMaps.setFIELDS_TO_TAGS_2_EXCLUDE_MAP(fieldsToTags2ExcludeMap);
         bibIndexer.setConfigMaps(configMaps);
-        bibIndexer.setProducerTemplate(producerTemplate);
+        ReportUtil reportUtil = new ReportUtil();
+        reportUtil.setProducerTemplate(producerTemplate);
         return bibIndexer.prepareSolrInputDocument(bibRecord);
     }
 

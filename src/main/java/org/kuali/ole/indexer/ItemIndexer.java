@@ -51,51 +51,56 @@ public class ItemIndexer extends OleDsNgIndexer {
     }
 
     public Map<String,SolrInputDocument> getInputDocumentForItem(ItemRecord itemRecord, Map parameterMap) {
-        SolrInputDocumentAndDocumentMap solrInputDocumentAndDocumentMap = buildSolrInputDocument(itemRecord, parameterMap);
-        SolrInputDocument itemSolrInputDocument = solrInputDocumentAndDocumentMap.getSolrInputDocument();
-        parameterMap = solrInputDocumentAndDocumentMap.getMap();
+        try {
+            SolrInputDocumentAndDocumentMap solrInputDocumentAndDocumentMap = buildSolrInputDocument(itemRecord, parameterMap);
+            SolrInputDocument itemSolrInputDocument = solrInputDocumentAndDocumentMap.getSolrInputDocument();
+            parameterMap = solrInputDocumentAndDocumentMap.getMap();
 
-        //***********************
-        Integer holdingsId = itemRecord.getHoldingsRecord().getHoldingsId();
-        String holdingsIdentifierWithPrefix = DocumentUniqueIDPrefix.getPrefixedId(
-                DocumentUniqueIDPrefix.PREFIX_WORK_HOLDINGS_OLEML, String.valueOf(holdingsId));
-        if (holdingsId != null) {
-            itemSolrInputDocument.addField(HOLDINGS_IDENTIFIER, holdingsIdentifierWithPrefix);
-        }
-
-        SolrInputDocument holdingSolrInputDocuemnt = getSolrInputDocumentFromMap(parameterMap, holdingsIdentifierWithPrefix);
-        if(null == holdingSolrInputDocuemnt) {
-            // Todo : Need to Build for Holdings
-        }
-
-        if(null != holdingSolrInputDocuemnt) {
-            Object bibs = holdingSolrInputDocuemnt.getFieldValues(BIB_IDENTIFIER);
-            addItemDetailsToHoldings(itemSolrInputDocument, holdingSolrInputDocuemnt);
-
-            addBibInfoForHoldingsOrItems(itemSolrInputDocument, holdingSolrInputDocuemnt);
-
-            itemSolrInputDocument.addField("bibIdentifier", bibs);  // Todo Need to verify
-
-
-            // Todo : Need to populate the holdings record
-            // Todo : Need to do auto fetch (Lazy Loading)
-            HoldingsRecord holdingsRecord = itemRecord.getHoldingsRecord();
-            String bibId = "";
-            if(null != holdingsRecord) {
-                bibId = String.valueOf(holdingsRecord.getBibRecord().getBibId());
+            //***********************
+            Integer holdingsId = itemRecord.getHoldingsRecord().getHoldingsId();
+            String holdingsIdentifierWithPrefix = DocumentUniqueIDPrefix.getPrefixedId(
+                    DocumentUniqueIDPrefix.PREFIX_WORK_HOLDINGS_OLEML, String.valueOf(holdingsId));
+            if (holdingsId != null) {
+                itemSolrInputDocument.addField(HOLDINGS_IDENTIFIER, holdingsIdentifierWithPrefix);
             }
-            String bibIdentifierWithPrefix = DocumentUniqueIDPrefix.getPrefixedId(
-                    DocumentUniqueIDPrefix.PREFIX_WORK_BIB_MARC, String.valueOf(bibId));
-            SolrInputDocument bibSolrInputDocuemnt = getSolrInputDocumentFromMap(parameterMap, bibIdentifierWithPrefix);
-            if(null == bibSolrInputDocuemnt) {
-                // Todo : Need to Build for bib
+
+            SolrInputDocument holdingSolrInputDocuemnt = getSolrInputDocumentFromMap(parameterMap, holdingsIdentifierWithPrefix);
+            if(null == holdingSolrInputDocuemnt) {
+                // Todo : Need to Build for Holdings
             }
-            addSolrInputDocumentToMap(parameterMap,itemSolrInputDocument);
-            addSolrInputDocumentToMap(parameterMap,holdingSolrInputDocuemnt);
-            bibSolrInputDocuemnt = addItemDetailsToBib(itemSolrInputDocument, bibSolrInputDocuemnt);
-            if(null != bibSolrInputDocuemnt) {
-                addSolrInputDocumentToMap(parameterMap, bibSolrInputDocuemnt);
+
+            if(null != holdingSolrInputDocuemnt) {
+                Object bibs = holdingSolrInputDocuemnt.getFieldValues(BIB_IDENTIFIER);
+                addItemDetailsToHoldings(itemSolrInputDocument, holdingSolrInputDocuemnt);
+
+                addBibInfoForHoldingsOrItems(itemSolrInputDocument, holdingSolrInputDocuemnt);
+
+                itemSolrInputDocument.addField("bibIdentifier", bibs);  // Todo Need to verify
+
+
+                // Todo : Need to populate the holdings record
+                // Todo : Need to do auto fetch (Lazy Loading)
+                HoldingsRecord holdingsRecord = itemRecord.getHoldingsRecord();
+                String bibId = "";
+                if(null != holdingsRecord) {
+                    bibId = String.valueOf(holdingsRecord.getBibRecord().getBibId());
+                }
+                String bibIdentifierWithPrefix = DocumentUniqueIDPrefix.getPrefixedId(
+                        DocumentUniqueIDPrefix.PREFIX_WORK_BIB_MARC, String.valueOf(bibId));
+                SolrInputDocument bibSolrInputDocuemnt = getSolrInputDocumentFromMap(parameterMap, bibIdentifierWithPrefix);
+                if(null == bibSolrInputDocuemnt) {
+                    // Todo : Need to Build for bib
+                }
+                addSolrInputDocumentToMap(parameterMap,itemSolrInputDocument);
+                addSolrInputDocumentToMap(parameterMap,holdingSolrInputDocuemnt);
+                bibSolrInputDocuemnt = addItemDetailsToBib(itemSolrInputDocument, bibSolrInputDocuemnt);
+                if(null != bibSolrInputDocuemnt) {
+                    addSolrInputDocumentToMap(parameterMap, bibSolrInputDocuemnt);
+                }
             }
+        } catch (Exception e) {
+            e.printStackTrace();
+            reportUtil.saveExceptionReportForItem(itemRecord, e);
         }
 
         //***********************
@@ -106,10 +111,8 @@ public class ItemIndexer extends OleDsNgIndexer {
     @Override
     public SolrInputDocumentAndDocumentMap buildSolrInputDocument(Object object, Map<String, SolrInputDocument> parameterMap) {
         SolrInputDocument solrInputDocument = new SolrInputDocument();
+        ItemRecord itemRecord = (ItemRecord) object;
         try {
-            ItemRecord itemRecord = (ItemRecord) object;
-
-
             String itemIdentifierWithPrefix = DocumentUniqueIDPrefix.getPrefixedId(DocumentUniqueIDPrefix.PREFIX_WORK_ITEM_OLEML, String.valueOf(itemRecord.getItemId()));
 
             solrInputDocument.addField(DOC_CATEGORY, DocCategory.WORK.getCode());

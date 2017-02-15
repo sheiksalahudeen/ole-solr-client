@@ -381,4 +381,16 @@ public class Constants {
     public static final String UTF_8 = "UTF-8";
     public static final String UTF_8_XML_TAG = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
 
+
+    public static final String SOLR_INDEX_EXCEPTION = "SolrIndexException";
+    public static final String SOLR_INDEX_FAILURE_REPORT = "Solr_Index_Failure_Report";
+    public static final String BIB = "Bib";
+    public static final String ITEM = "Item";
+    public static final String HOLDINGS = "Holdings";
+    public static final String HOLDING_ID = "HoldingId";
+    public static final String ITEM_ID = "ItemId";
+    public static final String EXCEPTION_MSG = "ExceptionMessage";
+    public static final String REPORT_Q= "oleactivemq:queue:reportQ";
+    public static final String REPORT_ROUTE_ID = "reportQRoute";
+
 }

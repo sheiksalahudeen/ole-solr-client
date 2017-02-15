@@ -387,10 +387,15 @@ public class Constants {
     public static final String BIB = "Bib";
     public static final String ITEM = "Item";
     public static final String HOLDINGS = "Holdings";
+    public static final String BIBID = "BibId";
     public static final String HOLDING_ID = "HoldingId";
     public static final String ITEM_ID = "ItemId";
     public static final String EXCEPTION_MSG = "ExceptionMessage";
     public static final String REPORT_Q= "oleactivemq:queue:reportQ";
+    public static final String CSV_SOLR_EXCEPTION_REPORT_ROUTE_ID = "csvSolrExceptionReportRoute";
     public static final String REPORT_ROUTE_ID = "reportQRoute";
+    public static final String CSV_SOLR_EXCEPTION_REPORT_Q = "oleactivemq:queue:csvSolrExceptionReportQ";
+    public static final String DATE_FORMAT_FOR_FILE_NAME = "ddMMMyyyy";
+    public static final String REPORT_FILE_NAME = "fileName";
 
 }

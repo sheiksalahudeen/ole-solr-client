@@ -148,22 +148,6 @@ public class BibIndexExecutorService {
                     deleteTempIndexes(coreNames, solrServerProtocol + solrUrl);
                     logger.info("Num of Bibs Processed and indexed to core " + solrCore + " on commit interval : " + numOfBibsProcessed);
                     logger.info("Total Num of Bibs Processed and indexed to core " + solrCore + " : " + totalBibsProcessed);
-//                    Long solrBibCount = bibSolrCrudRepository.countByDocType(RecapConstants.BIB);
-//                    logger.info("Total number of Bibs in Solr : " + solrBibCount);
-
-                    /*SedaEndpoint solrQSedaEndPoint = (SedaEndpoint) producerTemplate.getCamelContext().getEndpoint(RecapConstants.SOLR_QUEUE);
-                    Integer solrQSize = solrQSedaEndPoint.getExchanges().size();
-                    logger.info("Solr Queue size : " + solrQSize);
-                    while (solrQSize != 0) {
-                        solrQSize = solrQSedaEndPoint.getExchanges().size();
-                    }
-                    Future<Object> future = producerTemplate.asyncRequestBodyAndHeader(solrRouterURI + "://" + solrUri + "/" + coreName, "", SolrConstants.OPERATION, SolrConstants.OPERATION_COMMIT);
-                    while (!future.isDone()) {
-                        //NoOp.
-                    }
-                    logger.info("Commit future done : " + future.isDone());
-                    logger.info("Num of Bibs Processed and indexed to core " + coreName + " on commit interval : " + numOfBibsProcessed);
-                    logger.info("Total Num of Bibs Processed and indexed to core " + coreName + " : " + totalBibsProcessed);*/
                 }
                 logger.info("Total futures executed: " + futureCount);
                 stopWatch.stop();

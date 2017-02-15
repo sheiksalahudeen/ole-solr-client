@@ -1,0 +1,73 @@
+<div class="panel-group" data-allow-multiple="true" role="tablist"
+     aria-multiselectable="true">
+    <div class="panel panel-primary">
+        <div class="panel-heading" role="tab">
+            <h1 class="panel-title">
+            <span style="cursor:pointer" data-toggle="collapse" data-target="#fullIndexPanel"
+                  ng-click="collapsed = !collapsed">
+                <span class="glyphicon"
+                      ng-class="{'glyphicon-chevron-right': !collapsed, 'glyphicon-chevron-down': collapsed}"></span>
+                    Generate Report
+            </span>
+            </h1>
+        </div>
+        <div id="fullIndexPanel" class="panel-collapse collapse" role="tabpanel">
+            <div class="panel-body">
+                <form id="reports-form" name="reports-form" class="form-horizontal" action="#" method="post"
+                      enctype="multipart/form-data">
+
+                    <div class="form-group">
+                        <label for="reportType" class="col-sm-4">Report Type</label>
+                        <div class="col-sm-4">
+                            <select id="reportType"
+                                    class="form-control"
+                                    style="width: 160px;"
+                                    ng-model="reportRequest.reportType">
+                                <option value="SolrIndexException">SolrIndexException</option>
+                                <option value="Summary">Summary</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="createdDate" class="col-sm-4">Date</label>
+
+                        <div class="col-sm-4">
+                            <input type="text" ng-model="reportRequest.createdDate"
+                                   class="form-control bfh-number"
+                                   id="createdDate"
+                                   placeholder="Date"/>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="col-sm-4"></label>
+                        <div class="col-sm-4">
+
+                            <button id="report" name="report" class="btn btn-primary"
+                                    type="button" ng-click="generateReport();" ng-disabled="running">Generate Report
+                            </button>
+                        </div>
+                    </div>
+
+                    <br/><br/><br/>
+                    <div class="form-group col-sm-12">
+                                                        <textarea class="form-control" id="reportStatus" rows="5"
+                                                                  placeholder="Report Status"
+                                                                  readonly="true"></textarea>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div>
+        <modal id="messageDialogId" title="{{title}}" visible="showDialog">
+            <div>
+                <span id="message">{{message}}</span>
+            </div>
+        </modal>
+    </div>
+</div>
+

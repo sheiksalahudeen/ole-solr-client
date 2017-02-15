@@ -5,13 +5,15 @@ angular.module("oleSolrClient", [
 	'oleSolrClient.login',
 	'oleSolrClient.fullIndex',
 	'oleSolrClient.partialIndex',
+	'oleSolrClient.report',
 	'oleSolrClient.app-service',
 	'oleSolrClient.app-filter'
 	])
 .config(['$routeProvider','$httpProvider', function($routeProvider,$httpProvider) {
 	$routeProvider
 		.when("/partialIndex", {templateUrl: "view/partialIndex.html",controller:"partialIndexCtrl"})
-		.when("/fullIndex", {templateUrl: "view/fullIndex.html",controller:"fullIndexCtrl"});
+		.when("/fullIndex", {templateUrl: "view/fullIndex.html",controller:"fullIndexCtrl"})
+		.when("/report", {templateUrl: "view/report.html",controller:"reportCtrl"});
 
 	$httpProvider.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 
@@ -35,6 +37,7 @@ angular.module("oleSolrClient", [
 var OLESOLRCLIENT_CONSTANTS = {
 	SIGNIN : "signin",
 	FULL_INDEX: "fullIndex",
+	GENERATE_REPORT: "generateReport",
 	FULL_INDEX_STATUS : "fullIndexStatus",
 	ROL_ADMINISTRATOR : "ROL_ADMINISTRATOR"
 }

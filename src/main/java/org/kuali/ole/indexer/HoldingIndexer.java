@@ -84,6 +84,7 @@ public class HoldingIndexer extends OleDsNgIndexer {
                     ItemRecord itemRecord = iterator.next();
                     ItemIndexer itemIndexer = new ItemIndexer();
                     itemIndexer.setOleMemorizeService(getOleMemorizeService());
+                    itemIndexer.setReportUtil(getReportUtil());
                     //Todo : Need to do for Item.
                     parameterMap = itemIndexer.getInputDocumentForItem(itemRecord, parameterMap);
                     String itemIdentifierWithPrefix = DocumentUniqueIDPrefix.getPrefixedId(DocumentUniqueIDPrefix.PREFIX_WORK_ITEM_OLEML, String.valueOf(itemRecord.getItemId()));

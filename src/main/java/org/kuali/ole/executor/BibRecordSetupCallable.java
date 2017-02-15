@@ -47,6 +47,7 @@ public class BibRecordSetupCallable implements Callable{
         bibIndexer.setConfigMaps(configMaps);
         ReportUtil reportUtil = new ReportUtil();
         reportUtil.setProducerTemplate(producerTemplate);
+        bibIndexer.setReportUtil(reportUtil);
         return bibIndexer.prepareSolrInputDocument(bibRecord);
     }
 

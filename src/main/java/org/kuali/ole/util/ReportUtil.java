@@ -36,7 +36,7 @@ public class ReportUtil {
 
         if(bibRecord.getBibId() != null) {
             ReportDataEntity bibIdDataEntity = new ReportDataEntity();
-            bibIdDataEntity.setHeaderName(Constants.BIB_ID);
+            bibIdDataEntity.setHeaderName(Constants.BIBID);
             bibIdDataEntity.setHeaderValue(String.valueOf(bibRecord.getBibId()));
             reportDataEntities.add(bibIdDataEntity);
         }
@@ -73,8 +73,9 @@ public class ReportUtil {
             BibRecord bibRecord = holdingsRecord.getBibRecord();
             if(null != bibRecord) {
                 ReportDataEntity bibIdDataEntity = new ReportDataEntity();
-                bibIdDataEntity.setHeaderName(Constants.BIB_ID);
+                bibIdDataEntity.setHeaderName(Constants.BIBID);
                 bibIdDataEntity.setHeaderValue(String.valueOf(bibRecord.getBibId()));
+                reportDataEntities.add(bibIdDataEntity);
             }
         }
 
@@ -106,6 +107,7 @@ public class ReportUtil {
             ReportDataEntity itemIdDataEntity = new ReportDataEntity();
             itemIdDataEntity.setHeaderName(Constants.ITEM_ID);
             itemIdDataEntity.setHeaderValue(String.valueOf(itemRecord.getItemId()));
+            reportDataEntities.add(itemIdDataEntity);
 
             HoldingsRecord holdingsRecord = itemRecord.getHoldingsRecord();
             if(null != holdingsRecord) {
@@ -117,8 +119,9 @@ public class ReportUtil {
                 BibRecord bibRecord = holdingsRecord.getBibRecord();
                 if(null != bibRecord) {
                     ReportDataEntity bibIdDataEntity = new ReportDataEntity();
-                    bibIdDataEntity.setHeaderName(Constants.BIB_ID);
+                    bibIdDataEntity.setHeaderName(Constants.BIBID);
                     bibIdDataEntity.setHeaderValue(String.valueOf(bibRecord.getBibId()));
+                    reportDataEntities.add(bibIdDataEntity);
                 }                
             }           
             
@@ -144,7 +147,7 @@ public class ReportUtil {
                 methodName = stackTraceElement.getMethodName();
                 lineNumber = stackTraceElement.getLineNumber();
                 if(StringUtils.isNotBlank(detailedMessage.toString())){
-                    detailedMessage.append("\n");
+                    detailedMessage.append("---> ");
                 }
                 detailedMessage.append(className + "." + methodName + "():line#" + lineNumber);
             }

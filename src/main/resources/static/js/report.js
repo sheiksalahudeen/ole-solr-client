@@ -5,6 +5,9 @@ angular.module("oleSolrClient.report", ['ui.bootstrap', 'ngStorage', 'ui.bootstr
         function ($scope, $location, $routeParams, oleSolrClientAPIService, $localStorage, $filter) {
             console.log("Generate Report");
 
+            $scope.currentPage = 1;
+            $scope.pageSize = 10;
+
             $scope.inlineOptions = {
                 customClass: getDayClass,
                 minDate: new Date(),
@@ -54,6 +57,22 @@ angular.module("oleSolrClient.report", ['ui.bootstrap', 'ngStorage', 'ui.bootstr
                 return '';
             }
 
+            $scope.initializeReportList = function() {
+                oleSolrClientAPIService.getRestCall(OLESOLRCLIENT_CONSTANTS.GET_REPORT_FILES, {}).then(function (response) {
+                    var data = response.data;
+                    console.log(data);
+                    $scope.fileList = data;
+
+                }, function (response) {
+                    console.log("Loading initial files failed.");
+                    console.log(response);
+
+                });
+            };
+
+
+            $scope.initializeReportList();
+
             $scope.generateReport = function () {
                 oleSolrClientAPIService.postRestCall(OLESOLRCLIENT_CONSTANTS.GENERATE_REPORT, {}, $scope.reportRequest).then(function (response) {
                     var data = response.data;
@@ -63,6 +82,8 @@ angular.module("oleSolrClient.report", ['ui.bootstrap', 'ngStorage', 'ui.bootstr
                     $scope.showDialog = true;
                     console.log(data);
 
+                    $scope.initializeReportList();
+
                 }, function (response) {
                     console.log("Report generation failed");
                     console.log(response);
@@ -71,4 +92,10 @@ angular.module("oleSolrClient.report", ['ui.bootstrap', 'ngStorage', 'ui.bootstr
                     $scope.showDialog = true;
                 });
             };
+
+            $scope.downloadReport = function(file) {
+                var url = OLESOLRCLIENT_CONSTANTS.DOWNLOAD_REPORT_FILE + "?fileName=" + file.name + "&parent=" + file.parent;
+                window.location.href = url;
+            };
+
         }]);

@@ -1,6 +1,9 @@
 package org.kuali.ole.controller;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.kuali.ole.Constants;
@@ -13,12 +16,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.MediaType;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.ui.Model;
 import org.springframework.util.StopWatch;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 
+import javax.servlet.http.HttpServletResponse;
+import java.io.File;
+import java.io.IOException;
 import java.security.Principal;
 import java.util.Calendar;
 import java.util.Date;
@@ -45,6 +52,9 @@ public class MainController {
 
     @Value("${noOfBibProcessThreads}")
     private String noOfBibProcessThreads;
+
+    @Value("${solr.report.directory}")
+    private String solrReportDirectory;
 
     private FullIndexStatus fullIndexStatus = FullIndexStatus.getInstance();
 
@@ -127,6 +137,44 @@ public class MainController {
 
     }
 
+
+    @RequestMapping(method = RequestMethod.GET, value = "/getReportsFiles", produces = {"application/json" + Constants.CHARSET_UTF_8})
+    @ResponseBody
+    public String getReportsFiles() {
+        JSONArray response = new JSONArray();
+        try {
+            File reportDirectory = new File(solrReportDirectory);
+            response = getFileListResponse(reportDirectory);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return response.toString();
+    }
+
+    private JSONArray getFileListResponse(File reportDirectory) throws JSONException {
+        JSONArray response = new JSONArray();
+        if(reportDirectory.exists() && reportDirectory.isDirectory()) {
+            File[] fileLists = reportDirectory.listFiles();
+            for(File file : fileLists) {
+                if(file.isFile()) {
+                    JSONObject fileObject = new JSONObject();
+                    fileObject.put("id",file.getName());
+                    fileObject.put("name",file.getName());
+                    fileObject.put("parent",file.getParentFile().getName());
+                    response.put(fileObject);
+                } else if(file.isDirectory()) {
+                    JSONArray fileListResponse = getFileListResponse(file);
+                    for(int index = 0;  index < fileListResponse.length(); index++) {
+                        JSONObject jsonObject = fileListResponse.getJSONObject(index);
+                        response.put(jsonObject);
+                    }
+                }
+            }
+        }
+        return response;
+    }
+
     @ResponseBody
     @RequestMapping(value="/fullIndexStatus", method = RequestMethod.GET, produces = "application/json")
     public FullIndexStatus fullIndexStatus() {
@@ -157,5 +205,42 @@ public class MainController {
         cal.set(Calendar.MINUTE, 59);
         cal.set(Calendar.SECOND, 59);
         return cal.getTime();
+    }
+
+    @RequestMapping(method = RequestMethod.GET, value = "downloadReportFile")
+    @ResponseBody
+    public byte[] downloadReportFile(@RequestParam("fileName") String fileName, @RequestParam("parent") String parent, HttpServletResponse response) throws IOException {
+
+        byte[] fileContentBytes = null;
+
+        String fileContent = "";
+
+        try {
+            File reportDirectory = new File(solrReportDirectory);
+            if(reportDirectory.exists() && reportDirectory.isDirectory()) {
+                File file = null;
+                if(!reportDirectory.getName().equals(parent)) {
+                    file = new File(reportDirectory + File.separator + parent + File.separator + fileName);
+                } else {
+                    file = new File(reportDirectory + File.separator + fileName);
+                }
+                if(file.exists() && file.isFile()) {
+                    fileContentBytes =  FileUtils.readFileToByteArray(file);
+                }
+
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+
+        response.setContentType("text/csv");
+        response.setHeader("Content-Disposition", "attachment; filename=\"" + fileName + "\"");
+        response.setHeader("Pragma", "no-cache");
+        response.setHeader("Cache-Control", "no-cache");
+        response.setContentLength(fileContentBytes.length);
+
+        return fileContentBytes;
+
     }
 }

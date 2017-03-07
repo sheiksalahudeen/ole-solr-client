@@ -38,6 +38,8 @@ var OLESOLRCLIENT_CONSTANTS = {
 	SIGNIN : "signin",
 	FULL_INDEX: "fullIndex",
 	GENERATE_REPORT: "generateReport",
+	GET_REPORT_FILES: "getReportsFiles",
+    DOWNLOAD_REPORT_FILE: "downloadReportFile",
 	FULL_INDEX_STATUS : "fullIndexStatus",
 	ROL_ADMINISTRATOR : "ROL_ADMINISTRATOR"
 }

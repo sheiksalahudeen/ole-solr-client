@@ -395,7 +395,8 @@ public class Constants {
     public static final String CSV_SOLR_EXCEPTION_REPORT_ROUTE_ID = "csvSolrExceptionReportRoute";
     public static final String REPORT_ROUTE_ID = "reportQRoute";
     public static final String CSV_SOLR_EXCEPTION_REPORT_Q = "oleactivemq:queue:csvSolrExceptionReportQ";
-    public static final String DATE_FORMAT_FOR_FILE_NAME = "ddMMMyyyy";
+    public static final String DATE_FORMAT_FOR_FILE_NAME = "ddMMMyyyy_hh:mm:ss:a";
     public static final String REPORT_FILE_NAME = "fileName";
+    public static final String CHARSET_UTF_8 = ";charset=UTF-8";
 
 }

@@ -3,15 +3,10 @@
     <div class="panel panel-primary">
         <div class="panel-heading" role="tab">
             <h1 class="panel-title">
-            <span style="cursor:pointer" data-toggle="collapse" data-target="#fullIndexPanel"
-                  ng-click="collapsed = !collapsed">
-                <span class="glyphicon"
-                      ng-class="{'glyphicon-chevron-right': !collapsed, 'glyphicon-chevron-down': collapsed}"></span>
-                    Generate Report
-            </span>
+                Generate Report
             </h1>
         </div>
-        <div id="fullIndexPanel" class="panel-collapse collapse" role="tabpanel">
+        <div id="fullIndexPanel" role="tabpanel">
             <div class="panel-body">
                 <form id="reports-form" name="reports-form" class="form-horizontal" action="#" method="post"
                       enctype="multipart/form-data">
@@ -57,13 +52,6 @@
                         </div>
                     </div>
 
-                    <br/><br/><br/>
-                    <div class="form-group col-sm-12">
-                                                        <textarea class="form-control" id="reportStatus" rows="5"
-                                                                  placeholder="Report Status"
-                                                                  readonly="true"></textarea>
-                    </div>
-
                 </form>
             </div>
         </div>
@@ -76,5 +64,43 @@
             </div>
         </modal>
     </div>
+</div>
+
+
+<div id="reportListDivId" class="bs-component">
+    <div class="alert alert-info" ng-show="fileList.length === 0">
+        <strong>No files found to download</strong>
+    </div>
+
+    <div ng-show="fileList.length > 0">
+            Showing {{((currentPage - 1)*pageSize) + 1}} to {{currentPage * pageSize}} from {{fileList.length}} files
+    </div>
+
+    <div>
+        <div class="form-group">
+            <table class="table table-bordered row-border hover">
+                <thead style="height: 20px">
+                <tr>
+                    <th>S. No</th>
+                    <th>File Name</th>
+                    <th style="width: 280px">Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr ng-repeat="file in fileList | paginate:currentPage:pageSize">
+                    <td><span ng-bind="$index"></span></td>
+                    <td><span ng-bind="file.name"></span></td>
+
+                    <td>
+                        <a ng-click="downloadReport(file)" href="">Download</a>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <ul uib-pagination total-items="fileList.length"
+        ng-model="currentPage" items-per-page="pageSize"></ul>
 </div>
 

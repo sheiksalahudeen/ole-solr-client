@@ -18,9 +18,6 @@ public class ReportEntity  implements Serializable {
     @Column(name = "RECORD_NUM")
     private Integer recordNumber;
 
-    @Column(name = "FILE_NAME")
-    private String fileName;
-
     @Column(name = "TYPE")
     private String type;
 
@@ -31,14 +28,6 @@ public class ReportEntity  implements Serializable {
     @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name = "RECORD_NUM")
     private List<ReportDataEntity> reportDataEntities = new ArrayList<>();
-
-    public String getFileName() {
-        return fileName;
-    }
-
-    public void setFileName(String fileName) {
-        this.fileName = fileName;
-    }
 
     public Integer getRecordNumber() {
         return recordNumber;

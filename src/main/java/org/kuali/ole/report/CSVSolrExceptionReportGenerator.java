@@ -30,7 +30,7 @@ public class CSVSolrExceptionReportGenerator {
     @Autowired
     ProducerTemplate producer;
 
-    public String generateReport(String fileName, List<ReportEntity> reportEntityList) {
+    public String generateReport(List<ReportEntity> reportEntityList, String fileNameToCreate) {
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
 
@@ -47,9 +47,9 @@ public class CSVSolrExceptionReportGenerator {
         logger.info("Total Num of CSVRecords Prepared : " + solrExceptionReportCSVRecords.size());
 
         if(!CollectionUtils.isEmpty(solrExceptionReportCSVRecords)) {
-            producer.sendBodyAndHeader(Constants.CSV_SOLR_EXCEPTION_REPORT_Q, solrExceptionReportCSVRecords, Constants.REPORT_FILE_NAME, fileName);
+            producer.sendBodyAndHeader(Constants.CSV_SOLR_EXCEPTION_REPORT_Q, solrExceptionReportCSVRecords, Constants.REPORT_FILE_NAME, fileNameToCreate);
             DateFormat df = new SimpleDateFormat(Constants.DATE_FORMAT_FOR_FILE_NAME);
-            String generatedFileName = fileName + "-" + df.format(new Date()) + ".csv";
+            String generatedFileName = fileNameToCreate + "-" + df.format(new Date()) + ".csv";
             return generatedFileName;
         }
 

@@ -1,5 +1,6 @@
 package org.kuali.ole.report;
 
+import org.kuali.ole.Constants;
 import org.kuali.ole.model.jpa.ReportEntity;
 import org.kuali.ole.repo.jpa.ReportDetailRepository;
 import org.slf4j.Logger;
@@ -8,6 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StopWatch;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
@@ -26,15 +29,17 @@ public class ReportGenerator {
     CSVSolrExceptionReportGenerator csvSolrExceptionReportGenerator;
 
 
-    public String generateReport(String fileName, String reportType, Date from, Date to) {
+    public String generateReport(String reportType, Date from, Date to) {
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
         List<ReportEntity> reportEntityList;
-        reportEntityList = reportDetailRepository.findByFileAndTypeAndDateRange(fileName, reportType, from, to);
+        reportEntityList = reportDetailRepository.findByTypeAndDateRange(reportType, from, to);
         stopWatch.stop();
         logger.info("Total Time taken to fetch Report Entities From DB : " + stopWatch.getTotalTimeSeconds());
         logger.info("Total Num of Report Entities Fetched From DB : " + reportEntityList.size());
-        String generatedFileName = csvSolrExceptionReportGenerator.generateReport(fileName, reportEntityList);
+        DateFormat df = new SimpleDateFormat(Constants.DATE_FORMAT_FOR_FILE_NAME);
+        String fileNameToCreate = Constants.SOLR_INDEX_FAILURE_REPORT +"_From_" + df.format(from) + "_To_" + df.format(to);
+        String generatedFileName = csvSolrExceptionReportGenerator.generateReport(reportEntityList, fileNameToCreate);
         logger.info("The Generated File Name is : " + generatedFileName);
         return generatedFileName;
     }

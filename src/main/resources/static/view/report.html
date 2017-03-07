@@ -21,7 +21,6 @@
                         <div class="col-sm-4">
                             <select id="reportType"
                                     class="form-control"
-                                    style="width: 160px;"
                                     ng-model="reportRequest.reportType">
                                 <option value="SolrIndexException">SolrIndexException</option>
                                 <option value="Summary">Summary</option>
@@ -33,10 +32,18 @@
                         <label for="createdDate" class="col-sm-4">Date</label>
 
                         <div class="col-sm-4">
-                            <input type="text" ng-model="reportRequest.createdDate"
-                                   class="form-control bfh-number"
-                                   id="createdDate"
-                                   placeholder="Date"/>
+
+                            <p class="input-group">
+                                <input id="createdDate" name="createdDate" type="text" class="form-control"
+                                       uib-datepicker-popup="{{format}}" ng-model="reportRequest.createdDate"
+                                       is-open="createdDateFromPopup.opened" datepicker-options="dateOptions"/>
+                                <span class="input-group-btn">
+                        <button type="button" class="btn btn-default" ng-click="openCreatedDateFrom()">
+                                <i class="glyphicon glyphicon-calendar"></i>
+                        </button>
+                    </span>
+                            </p>
+
                         </div>
                     </div>
 

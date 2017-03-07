@@ -22,7 +22,6 @@ public class ReportUtil {
         ReportEntity reportEntity = new ReportEntity();
         reportEntity.setCreatedDate(new Date());
         reportEntity.setType(Constants.SOLR_INDEX_EXCEPTION);
-        reportEntity.setFileName(Constants.SOLR_INDEX_FAILURE_REPORT);
 
         ReportDataEntity docTypeDataEntity = new ReportDataEntity();
         docTypeDataEntity.setHeaderName(Constants.DOC_TYPE);
@@ -51,7 +50,6 @@ public class ReportUtil {
         ReportEntity reportEntity = new ReportEntity();
         reportEntity.setCreatedDate(new Date());
         reportEntity.setType(Constants.SOLR_INDEX_EXCEPTION);
-        reportEntity.setFileName(Constants.SOLR_INDEX_FAILURE_REPORT);
 
         ReportDataEntity docTypeDataEntity = new ReportDataEntity();
         docTypeDataEntity.setHeaderName(Constants.DOC_TYPE);
@@ -91,7 +89,6 @@ public class ReportUtil {
         ReportEntity reportEntity = new ReportEntity();
         reportEntity.setCreatedDate(new Date());
         reportEntity.setType(Constants.SOLR_INDEX_EXCEPTION);
-        reportEntity.setFileName(Constants.SOLR_INDEX_FAILURE_REPORT);
 
         ReportDataEntity docTypeDataEntity = new ReportDataEntity();
         docTypeDataEntity.setHeaderName(Constants.DOC_TYPE);

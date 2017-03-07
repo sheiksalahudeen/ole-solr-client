@@ -87,9 +87,11 @@ public class MainController {
         }
         String reportType = ReportRequest.getReportType();
         String generatedReportFileName = null;
+
+        JSONObject jsonObject = new JSONObject();
+
         String status = "";
-        String fileName = Constants.SOLR_INDEX_FAILURE_REPORT;
-        generatedReportFileName = reportGenerator.generateReport(fileName, reportType, getFromDate(createdDate), getToDate(createdDate));
+        generatedReportFileName = reportGenerator.generateReport(reportType, getFromDate(createdDate), getToDate(createdDate));
         if(StringUtils.isEmpty(generatedReportFileName)) {
             status = "Report wasn't generated! Please contact help desk!";
         } else {
@@ -97,7 +99,12 @@ public class MainController {
         }
         stopWatch.stop();
         logger.info("Total time taken to generate File : " + stopWatch.getTotalTimeSeconds());
-        return status;
+        try {
+            jsonObject.put("status", status);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return jsonObject.toString();
     }
 
     private FullIndexRequest initiateFullIndexRequest(FullIndexRequest fullIndexRequest) {

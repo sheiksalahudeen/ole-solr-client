@@ -5,10 +5,64 @@ angular.module("oleSolrClient.report", ['ui.bootstrap', 'ngStorage', 'ui.bootstr
         function ($scope, $location, $routeParams, oleSolrClientAPIService, $localStorage, $filter) {
             console.log("Generate Report");
 
+            $scope.inlineOptions = {
+                customClass: getDayClass,
+                minDate: new Date(),
+                showWeeks: true
+            };
+
+            $scope.dateOptions = {
+                //dateDisabled: disabled,
+                formatYear: 'yy',
+                maxDate: new Date(2020, 5, 22),
+                minDate: new Date(),
+                startingDay: 1
+            };
+
+            $scope.toggleMin = function() {
+                $scope.inlineOptions.minDate = $scope.inlineOptions.minDate ? null : new Date();
+                $scope.dateOptions.minDate = $scope.inlineOptions.minDate;
+            };
+
+            $scope.toggleMin();
+
+            $scope.openCreatedDateFrom = function() {
+                $scope.createdDateFromPopup.opened = true;
+            };
+
+            $scope.format = 'dd-MM-yyyy';
+
+            $scope.createdDateFromPopup = {
+                opened: false
+            };
+
+            function getDayClass(data) {
+                var date = data.date,
+                    mode = data.mode;
+                if (mode === 'day') {
+                    var dayToCheck = new Date(date).setHours(0,0,0,0);
+
+                    for (var i = 0; i < $scope.events.length; i++) {
+                        var currentDay = new Date($scope.events[i].date).setHours(0,0,0,0);
+
+                        if (dayToCheck === currentDay) {
+                            return $scope.events[i].status;
+                        }
+                    }
+                }
+
+                return '';
+            }
+
             $scope.generateReport = function () {
                 oleSolrClientAPIService.postRestCall(OLESOLRCLIENT_CONSTANTS.GENERATE_REPORT, {}, $scope.reportRequest).then(function (response) {
                     var data = response.data;
+
+                    $scope.message = data.status;
+                    $scope.title = "Success";
+                    $scope.showDialog = true;
                     console.log(data);
+
                 }, function (response) {
                     console.log("Report generation failed");
                     console.log(response);

@@ -26,7 +26,7 @@ public class CSVSolrExceptionRecordRouteBuilder {
                     from(Constants.CSV_SOLR_EXCEPTION_REPORT_Q)
                             .routeId(Constants.CSV_SOLR_EXCEPTION_REPORT_ROUTE_ID)
                             .marshal().bindy(BindyType.Csv, SolrExceptionReportCSVRecord.class)
-                            .to("file:" + matchingReportsDirectory + File.separator + "?fileName=${in.header.fileName}-${date:now:ddMMMyyyy}.csv")
+                            .to("file:" + matchingReportsDirectory + File.separator + "?fileName=${in.header.fileName}-${date:now:ddMMMyyyy_hh-mm-ss-a}.csv")
                             .onCompletion().log("File has been created successfully.");
                 }
             });

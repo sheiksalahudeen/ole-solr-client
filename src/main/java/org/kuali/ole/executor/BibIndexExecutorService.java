@@ -75,8 +75,7 @@ public class BibIndexExecutorService {
         try {
             ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(numThreads);
 
-//            Integer totalDocCount = ((Long)bibRecordRepository.count()).intValue();
-            Integer totalDocCount = 1000;
+            Integer totalDocCount = ((Long)bibRecordRepository.count()).intValue();
             logger.info("Total Document Count From DB : " + totalDocCount);
 
             if (totalDocCount > 0) {

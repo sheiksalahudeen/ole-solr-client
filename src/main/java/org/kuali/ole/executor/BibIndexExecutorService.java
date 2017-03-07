@@ -75,7 +75,8 @@ public class BibIndexExecutorService {
         try {
             ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(numThreads);
 
-            Integer totalDocCount = ((Long)bibRecordRepository.count()).intValue();
+//            Integer totalDocCount = ((Long)bibRecordRepository.count()).intValue();
+            Integer totalDocCount = 1000;
             logger.info("Total Document Count From DB : " + totalDocCount);
 
             if (totalDocCount > 0) {
@@ -155,8 +156,6 @@ public class BibIndexExecutorService {
                 solrAdmin.unLoadCores(coreNames);
                 threadPoolExecutor.shutdown();
 
-                //Final commit
-//                producerTemplate.asyncRequestBodyAndHeader(solrRouterURI + "://" + solrUri + "/" + solrCore, "", SolrConstants.OPERATION, SolrConstants.OPERATION_COMMIT);
             } else {
                 logger.info("No records found to index for the criteria");
             }
@@ -165,6 +164,7 @@ public class BibIndexExecutorService {
         } finally {
             FullIndexStatus instance = FullIndexStatus.getInstance();
             instance.setEndTime(new Date());
+            instance.setRunning(false);
         }
         mainStopWatch.stop();
         logger.info("Total time taken:" + mainStopWatch.getTotalTimeSeconds() + " secs");

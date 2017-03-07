@@ -71,12 +71,4 @@ public class BibIndexingTxObject implements Serializable {
     public void setBibMarcRecordProcessor(BibMarcRecordProcessor bibMarcRecordProcessor) {
         this.bibMarcRecordProcessor = bibMarcRecordProcessor;
     }
-
-    public int getNoOfBibProcessThreads() {
-        return noOfBibProcessThreads;
-    }
-
-    public void setNoOfBibProcessThreads(int noOfBibProcessThreads) {
-        this.noOfBibProcessThreads = noOfBibProcessThreads;
-    }
 }

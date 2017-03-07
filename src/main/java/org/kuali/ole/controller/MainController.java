@@ -50,9 +50,6 @@ public class MainController {
     @Value("${docPerThread}")
     private String docPerThread;
 
-    @Value("${noOfBibProcessThreads}")
-    private String noOfBibProcessThreads;
-
     @Value("${solr.report.directory}")
     private String solrReportDirectory;
 
@@ -81,7 +78,6 @@ public class MainController {
         this.fullIndexStatus.resetStatus();
         this.fullIndexStatus.setNoOfDbThreads(fullIndexRequest.getNoOfDbThreads());
         this.fullIndexStatus.setDocsPerThread(fullIndexRequest.getDocsPerThread());
-        this.fullIndexStatus.setNoOfBibProcessThreads(fullIndexRequest.getNoOfBibProcessThreads());
         bibIndexExecutorService.indexDocument(fullIndexRequest);
         return this.fullIndexStatus;
     }
@@ -130,9 +126,6 @@ public class MainController {
             fullIndexRequest.setNoOfDbThreads(Integer.valueOf(noOfDbThread));
         }
 
-        if(null == fullIndexRequest.getNoOfBibProcessThreads() || fullIndexRequest.getNoOfBibProcessThreads() <= 0) {
-            fullIndexRequest.setNoOfBibProcessThreads(Integer.valueOf(noOfBibProcessThreads));
-        }
         return fullIndexRequest;
 
     }

@@ -19,7 +19,6 @@ public class FullIndexStatus {
     private int numberOfItemsProcessed;
     private boolean running;
     private Integer noOfDbThreads;
-    private Integer noOfBibProcessThreads;
     private Integer docsPerThread;
 
     private static FullIndexStatus ourInstance = new FullIndexStatus();
@@ -127,14 +126,6 @@ public class FullIndexStatus {
         this.noOfDbThreads = noOfDbThreads;
     }
 
-    public Integer getNoOfBibProcessThreads() {
-        return noOfBibProcessThreads;
-    }
-
-    public void setNoOfBibProcessThreads(Integer noOfBibProcessThreads) {
-        this.noOfBibProcessThreads = noOfBibProcessThreads;
-    }
-
     public Integer getDocsPerThread() {
         return docsPerThread;
     }
@@ -164,6 +155,18 @@ public class FullIndexStatus {
     public void addHoldingsProcessed(int count) {
         synchronized (this) {
             this.numberOfHoldingsProcessed += count;
+        }
+    }
+
+    public void addItemsFetched(int size) {
+        synchronized (this) {
+            this.numberOfItemsFetched += size;
+        }
+    }
+
+    public void addItemsProcessed(int count) {
+        synchronized (this) {
+            this.numberOfItemsProcessed += count;
         }
     }
 

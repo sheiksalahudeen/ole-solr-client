@@ -6,7 +6,9 @@ import org.apache.solr.common.SolrInputDocument;
 import org.kuali.ole.common.marc.xstream.BibMarcRecordProcessor;
 import org.kuali.ole.dao.OleMemorizeService;
 import org.kuali.ole.model.jpa.BibRecord;
+import org.kuali.ole.model.solr.RecordCountAndSolrDocumentMap;
 import org.kuali.ole.repo.BibRecordRepository;
+import org.kuali.ole.response.FullIndexStatus;
 import org.kuali.ole.util.HelperUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -83,7 +85,6 @@ public class BibIndexCallable implements Callable {
                     bibMarcRecordProcessor,
                     fieldsToTags2IncludeMap, fieldsToTags2ExcludeMap,
                     producerTemplate, oleMemorizeService));
-//            Future submit = executorService.submit(new BibItemRecordSetupCallable(bibRecord, solrTemplate, bibliographicDetailsRepository, holdingsDetailsRepository, producerTemplate));
             futures.add(submit);
         }
 
@@ -97,7 +98,16 @@ public class BibIndexCallable implements Callable {
                 Object object = future.get();
                 if(null != object) {
                     count++;
-                    solrInputDocumentsToIndex.addAll((List<SolrInputDocument>) object);
+                    RecordCountAndSolrDocumentMap recordCountAndSolrDocumentMap = (RecordCountAndSolrDocumentMap) object;
+                    Collection<SolrInputDocument> values = recordCountAndSolrDocumentMap.getSolrInputDocumentMap().values();
+                    solrInputDocumentsToIndex.addAll(values);
+                    FullIndexStatus instance = FullIndexStatus.getInstance();
+                    instance.addBibFetched(recordCountAndSolrDocumentMap.getNumberOfBibFetched());
+                    instance.addBibProcessed(recordCountAndSolrDocumentMap.getNumberOfBibProcessed());
+                    instance.addHoldingsFetched(recordCountAndSolrDocumentMap.getNumberOfHoldingsFetched());
+                    instance.addHoldingsProcessed(recordCountAndSolrDocumentMap.getNumberOfHoldingsProcessed());
+                    instance.addItemsFetched(recordCountAndSolrDocumentMap.getNumberOfItemsFetched());
+                    instance.addItemsProcessed(recordCountAndSolrDocumentMap.getNumberOfItemsProcessed());
                 }
             } catch (Exception e) {
                 logger.error("Exception : " + e.getMessage());

@@ -10,9 +10,8 @@ import org.kuali.ole.common.enums.DocFormat;
 import org.kuali.ole.common.enums.DocType;
 import org.kuali.ole.common.exception.DocstoreIndexException;
 import org.kuali.ole.common.util.CallNumberUtil;
-import org.kuali.ole.dao.OleMemorizeService;
 import org.kuali.ole.model.jpa.*;
-import org.kuali.ole.util.HelperUtil;
+import org.kuali.ole.model.solr.RecordCountAndSolrDocumentMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,35 +25,20 @@ public class HoldingIndexer extends OleDsNgIndexer {
 
     private static final Logger LOG = LoggerFactory.getLogger(HoldingIndexer.class);
 
-
-    @Override
-    public void indexDocument(Object object) {
-        HoldingsRecord holdingsRecord = (HoldingsRecord) object;
-        Map<String, SolrInputDocument> parameterMap = new HashMap<>();
-        parameterMap = getInputDocumentForHoldings(holdingsRecord, parameterMap);
-        List<SolrInputDocument> inputDocumentForHoldings = getSolrInputDocumentListFromMap(parameterMap);
-        commitDocumentToSolr(inputDocumentForHoldings);
-    }
-
-    @Override
-    public void updateDocument(Object object) {
-        HoldingsRecord holdingsRecord = (HoldingsRecord) object;
-        Map<String,SolrInputDocument> parameterMap = new HashMap();
-        Map<String, SolrInputDocument> inputDocumentForHoldings = getInputDocumentForHoldings(holdingsRecord, parameterMap);
-        List<SolrInputDocument> solrInputDocuments = getSolrInputDocumentListFromMap(inputDocumentForHoldings);
-        commitDocumentToSolr(solrInputDocuments);
-    }
-
     @Override
     public void deleteDocument(String id) {
 
     }
 
-    public Map<String,SolrInputDocument> getInputDocumentForHoldings(HoldingsRecord holdingsRecord, Map parameterMap) {
+    public RecordCountAndSolrDocumentMap getInputDocumentForHoldings(HoldingsRecord holdingsRecord, RecordCountAndSolrDocumentMap recordCountAndSolrDocumentMap) {
+        if(null == recordCountAndSolrDocumentMap) {
+            recordCountAndSolrDocumentMap = new RecordCountAndSolrDocumentMap();
+        }
+        Map<String, SolrInputDocument> solrInputDocumentMap = recordCountAndSolrDocumentMap.getSolrInputDocumentMap();
         try {
-            SolrInputDocumentAndDocumentMap solrInputDocumentAndDocumentMap = buildSolrInputDocument(holdingsRecord, parameterMap);
+            SolrInputDocumentAndDocumentMap solrInputDocumentAndDocumentMap = buildSolrInputDocument(holdingsRecord, solrInputDocumentMap);
             SolrInputDocument holdingsSolrInputDocument = solrInputDocumentAndDocumentMap.getSolrInputDocument();
-            parameterMap = solrInputDocumentAndDocumentMap.getMap();
+            solrInputDocumentMap = solrInputDocumentAndDocumentMap.getMap();
 
             Date date = new Date();
             holdingsSolrInputDocument.addField(UPDATED_BY, holdingsRecord.getUpdatedBy());
@@ -64,7 +48,7 @@ public class HoldingIndexer extends OleDsNgIndexer {
 
                 String bibIdentifierWithPrefix = DocumentUniqueIDPrefix.getPrefixedId(DocumentUniqueIDPrefix.PREFIX_WORK_BIB_MARC, String.valueOf(bibId));
 
-                SolrInputDocument bibSolrInputDocument = getSolrInputDocumentFromMap(parameterMap,bibIdentifierWithPrefix);
+                SolrInputDocument bibSolrInputDocument = getSolrInputDocumentFromMap(solrInputDocumentMap,bibIdentifierWithPrefix);
 
                 if(null == bibIdentifierWithPrefix) {
                     // Todo : Need to form solrInputDocument for Bib.
@@ -74,28 +58,36 @@ public class HoldingIndexer extends OleDsNgIndexer {
                 holdingsSolrInputDocument.addField(BIB_IDENTIFIER, bibIdentifierWithPrefix);
                 bibSolrInputDocument = addHoldingsDetailsToBib(holdingsSolrInputDocument,bibSolrInputDocument);
 
-                addSolrInputDocumentToMap(parameterMap,bibSolrInputDocument);
+                addSolrInputDocumentToMap(solrInputDocumentMap,bibSolrInputDocument);
             }
-            addSolrInputDocumentToMap(parameterMap,holdingsSolrInputDocument);
+            addSolrInputDocumentToMap(solrInputDocumentMap,holdingsSolrInputDocument);
             List<ItemRecord> itemRecords = holdingsRecord.getItemRecords();
             List<String> itemUUIds = new ArrayList<String>();
+
+            recordCountAndSolrDocumentMap.setSolrInputDocumentMap(solrInputDocumentMap);
+
             if(CollectionUtils.isNotEmpty(itemRecords)){
+                int processed = 0;
                 for (Iterator<ItemRecord> iterator = itemRecords.iterator(); iterator.hasNext(); ) {
                     ItemRecord itemRecord = iterator.next();
                     ItemIndexer itemIndexer = new ItemIndexer();
                     itemIndexer.setOleMemorizeService(getOleMemorizeService());
                     itemIndexer.setReportUtil(getReportUtil());
                     //Todo : Need to do for Item.
-                    parameterMap = itemIndexer.getInputDocumentForItem(itemRecord, parameterMap);
+                    recordCountAndSolrDocumentMap = itemIndexer.getInputDocumentForItem(itemRecord, recordCountAndSolrDocumentMap);
                     String itemIdentifierWithPrefix = DocumentUniqueIDPrefix.getPrefixedId(DocumentUniqueIDPrefix.PREFIX_WORK_ITEM_OLEML, String.valueOf(itemRecord.getItemId()));
                     itemUUIds.add(itemIdentifierWithPrefix);
+                    processed++;
                 }
+                recordCountAndSolrDocumentMap.setNumberOfItemsFetched(itemRecords.size());
+                recordCountAndSolrDocumentMap.setNumberOfItemsProcessed(processed);
             }
         } catch (Exception e) {
             e.printStackTrace();
             reportUtil.saveExceptionReportForHoldings(holdingsRecord, e);
         }
-        return parameterMap;
+
+        return recordCountAndSolrDocumentMap;
     }
 
     @Override

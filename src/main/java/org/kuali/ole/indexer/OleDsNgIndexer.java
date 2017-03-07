@@ -24,11 +24,6 @@ public abstract class OleDsNgIndexer extends MarcUtil {
     public static final String ID_FIELD_PREFIX = "id_disc_";
     private OleMemorizeService oleMemorizeService;
     protected ReportUtil reportUtil;
-//    private OleDsHelperUtil oleDsHelperUtil;
-
-    public abstract void indexDocument(Object object);
-
-    public abstract void updateDocument(Object object);
 
     public abstract void deleteDocument(String id);
 

@@ -1,34 +1,41 @@
 package org.kuali.ole.controller;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.kuali.ole.Constants;
-import org.kuali.ole.executor.BibIndexExecutorService;
+import org.kuali.ole.executor.BibFullIndexExecutorService;
+import org.kuali.ole.executor.BibPartialIndexExecutorService;
+import org.kuali.ole.repo.BibRecordRepository;
 import org.kuali.ole.report.ReportGenerator;
 import org.kuali.ole.request.FullIndexRequest;
 import org.kuali.ole.request.ReportRequest;
 import org.kuali.ole.response.FullIndexStatus;
+import org.kuali.ole.response.PartialIndexStatus;
+import org.kuali.ole.util.HelperUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.MediaType;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.ui.Model;
 import org.springframework.util.StopWatch;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
 import java.security.Principal;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 
 /**
  * Created by sheiks on 27/10/16.
@@ -39,7 +46,14 @@ public class MainController {
     Logger logger = LoggerFactory.getLogger(MainController.class);
 
     @Autowired
-    BibIndexExecutorService bibIndexExecutorService;
+    BibFullIndexExecutorService bibFullIndexExecutorService;
+
+
+    @Autowired
+    BibPartialIndexExecutorService bibPartialIndexExecutorService;
+
+    @Autowired
+    BibRecordRepository bibRecordRepository;
 
     @Autowired
     ReportGenerator reportGenerator;
@@ -54,6 +68,8 @@ public class MainController {
     private String solrReportDirectory;
 
     private FullIndexStatus fullIndexStatus = FullIndexStatus.getInstance();
+
+    private PartialIndexStatus partialIndexStatus = PartialIndexStatus.getInstance();
 
 
     @RequestMapping("/")
@@ -78,8 +94,60 @@ public class MainController {
         this.fullIndexStatus.resetStatus();
         this.fullIndexStatus.setNoOfDbThreads(fullIndexRequest.getNoOfDbThreads());
         this.fullIndexStatus.setDocsPerThread(fullIndexRequest.getDocsPerThread());
-        bibIndexExecutorService.indexDocument(fullIndexRequest);
+        bibFullIndexExecutorService.indexDocument(fullIndexRequest);
         return this.fullIndexStatus;
+    }
+
+    @ResponseBody
+    @RequestMapping(value="/partialIndexByFile", method = RequestMethod.POST, produces = "application/json")
+    public FullIndexStatus partialIndexByFile(@RequestParam("file") MultipartFile file,@RequestParam("docPerThread") Integer docPerThread, @RequestParam("numberOfThreads") Integer numberOfThreads, HttpServletRequest request) {
+        this.partialIndexStatus.resetStatus();
+        List<Integer> bibIds = getBibIdsFromFileContent(file);
+        bibPartialIndexExecutorService.indexDocument(bibIds,docPerThread, numberOfThreads);
+        return this.fullIndexStatus;
+    }
+
+    @ResponseBody
+    @RequestMapping(value="/partialIndexByDate", method = RequestMethod.POST, produces = "application/json")
+    public FullIndexStatus partialIndexByDate(@RequestParam("date") Date date,@RequestParam("docPerThread") Integer docPerThread, @RequestParam("numberOfThreads") Integer numberOfThreads, HttpServletRequest request) {
+        this.partialIndexStatus.resetStatus();
+
+        Date fromDate = getFromDate(date);
+        Date toDate = getToDate(new Date());
+        List<Integer> bibIdByDate = bibRecordRepository.getBibIdByDate(fromDate, toDate);
+        bibPartialIndexExecutorService.indexDocument(bibIdByDate,docPerThread, numberOfThreads);
+        return this.fullIndexStatus;
+
+    }
+
+    @ResponseBody
+    @RequestMapping(value="/partialIndexByBibIdRange", method = RequestMethod.POST, produces = "application/json")
+    public FullIndexStatus partialIndexByBibIdRange(@RequestParam("from") Integer from,@RequestParam("to") Integer to,@RequestParam("docPerThread") Integer docPerThread, @RequestParam("numberOfThreads") Integer numberOfThreads, HttpServletRequest request) {
+        this.partialIndexStatus.resetStatus();
+        List<Integer> bibIdByDate = getBibIdsFromRange(from, to);
+        bibPartialIndexExecutorService.indexDocument(bibIdByDate,docPerThread, numberOfThreads);
+        return this.fullIndexStatus;
+
+    }
+
+    private List<Integer> getBibIdsFromRange(Integer from, Integer to) {
+        List<Integer> bibIds= new ArrayList<>();
+        for(int index=from; index <= to; index++) {
+            bibIds.add(from);
+        }
+        return bibIds;
+    }
+
+    private List<Integer> getBibIdsFromFileContent(MultipartFile file) {
+        try {
+            byte[] bytes = file.getBytes();
+            String data = new String(bytes);
+            List<Integer> bibIds = HelperUtil.getListFromJSONArray(data);
+            return bibIds;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return new ArrayList<>();
     }
 
     @ResponseBody

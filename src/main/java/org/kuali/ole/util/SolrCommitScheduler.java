@@ -1,6 +1,6 @@
 package org.kuali.ole.util;
 
-import org.kuali.ole.executor.BibIndexCallable;
+import org.kuali.ole.callable.BibFullIndexCallable;
 import org.kuali.ole.service.SolrAdmin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,7 +13,7 @@ import java.util.TimerTask;
  */
 public class SolrCommitScheduler {
 
-    Logger logger = LoggerFactory.getLogger(BibIndexCallable.class);
+    Logger logger = LoggerFactory.getLogger(BibFullIndexCallable.class);
     Timer timer = new Timer();
 
 

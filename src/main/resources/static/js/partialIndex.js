@@ -4,4 +4,17 @@ angular.module("oleSolrClient.partialIndex", ['ui.bootstrap', 'ngStorage', 'ui.b
     .controller('partialIndexCtrl', ["$scope", "$location", "$routeParams", "oleSolrClientAPIService", "$localStorage", '$filter',
         function ($scope, $location, $routeParams, oleSolrClientAPIService, $localStorage, $filter) {
             console.log("Partial Index");
+            $scope.openCalendar = openCalendar;
+            $scope.datePickerOpenStatus = {};
+
+            $scope.datePickerOpenStatus.fromDate = false;
+            $scope.datePickerOpenStatus.toDate = false;
+
+            function openCalendar (date) {
+                $scope.datePickerOpenStatus[date] = true;
+            }
+            
+            
+            
+
         }]);

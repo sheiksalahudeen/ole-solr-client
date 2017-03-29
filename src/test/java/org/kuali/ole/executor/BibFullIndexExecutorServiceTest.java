@@ -11,15 +11,15 @@ import static org.junit.Assert.*;
 /**
  * Created by sheiks on 28/10/16.
  */
-public class BibIndexExecutorServiceTest extends BaseTestCase{
+public class BibFullIndexExecutorServiceTest extends BaseTestCase{
 
     @Autowired
-    BibIndexExecutorService bibIndexExecutorService;
+    BibFullIndexExecutorService bibFullIndexExecutorService;
 
     @Test
     public void indexDocument() throws Exception {
         DocumentSearchConfig.getDocumentSearchConfig();
-        Integer integer = bibIndexExecutorService.indexDocument(new FullIndexRequest());
+        Integer integer = bibFullIndexExecutorService.indexDocument(new FullIndexRequest());
         assertNotNull(integer);
         System.out.println(integer);
     }

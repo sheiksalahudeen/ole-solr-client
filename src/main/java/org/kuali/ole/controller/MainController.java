@@ -100,33 +100,45 @@ public class MainController {
 
     @ResponseBody
     @RequestMapping(value="/partialIndexByFile", method = RequestMethod.POST, produces = "application/json")
-    public FullIndexStatus partialIndexByFile(@RequestParam("file") MultipartFile file,@RequestParam("docPerThread") Integer docPerThread, @RequestParam("numberOfThreads") Integer numberOfThreads, HttpServletRequest request) {
+    public PartialIndexStatus partialIndexByFile(@RequestParam("file") MultipartFile file,@RequestParam("docPerThread") Integer docPerThread, @RequestParam("numberOfThreads") Integer numberOfThreads, HttpServletRequest request) {
         this.partialIndexStatus.resetStatus();
+        this.partialIndexStatus.setType("indexByFile");
+        this.partialIndexStatus.setDocsPerThread(docPerThread);
+        this.partialIndexStatus.setNoOfDbThreads(numberOfThreads);
         List<Integer> bibIds = getBibIdsFromFileContent(file);
         bibPartialIndexExecutorService.indexDocument(bibIds,docPerThread, numberOfThreads);
-        return this.fullIndexStatus;
+        return this.partialIndexStatus;
     }
 
     @ResponseBody
     @RequestMapping(value="/partialIndexByDate", method = RequestMethod.POST, produces = "application/json")
-    public FullIndexStatus partialIndexByDate(@RequestParam("date") Date date,@RequestParam("docPerThread") Integer docPerThread, @RequestParam("numberOfThreads") Integer numberOfThreads, HttpServletRequest request) {
+    public PartialIndexStatus partialIndexByDate(@RequestParam("fromDate") Date date,@RequestParam("docPerThread") Integer docPerThread, @RequestParam("numberOfThreads") Integer numberOfThreads, HttpServletRequest request) {
         this.partialIndexStatus.resetStatus();
-
+        this.partialIndexStatus.setType("indexByDate");
+        this.partialIndexStatus.setDocsPerThread(docPerThread);
+        this.partialIndexStatus.setNoOfDbThreads(numberOfThreads);
         Date fromDate = getFromDate(date);
         Date toDate = getToDate(new Date());
+        this.partialIndexStatus.setFromDate(fromDate);
+        this.partialIndexStatus.setToDate(toDate);
         List<Integer> bibIdByDate = bibRecordRepository.getBibIdByDate(fromDate, toDate);
         bibPartialIndexExecutorService.indexDocument(bibIdByDate,docPerThread, numberOfThreads);
-        return this.fullIndexStatus;
+        return this.partialIndexStatus;
 
     }
 
     @ResponseBody
     @RequestMapping(value="/partialIndexByBibIdRange", method = RequestMethod.POST, produces = "application/json")
-    public FullIndexStatus partialIndexByBibIdRange(@RequestParam("from") Integer from,@RequestParam("to") Integer to,@RequestParam("docPerThread") Integer docPerThread, @RequestParam("numberOfThreads") Integer numberOfThreads, HttpServletRequest request) {
+    public PartialIndexStatus partialIndexByBibIdRange(@RequestParam("fromBibId") Integer from,@RequestParam("toBibId") Integer to,@RequestParam("docPerThread") Integer docPerThread, @RequestParam("numberOfThreads") Integer numberOfThreads, HttpServletRequest request) {
         this.partialIndexStatus.resetStatus();
+        this.partialIndexStatus.setType("indexByRange");
+        this.partialIndexStatus.setDocsPerThread(docPerThread);
+        this.partialIndexStatus.setNoOfDbThreads(numberOfThreads);
+        this.partialIndexStatus.setFromBibId(from);
+        this.partialIndexStatus.setToBibId(to);
         List<Integer> bibIdByDate = getBibIdsFromRange(from, to);
         bibPartialIndexExecutorService.indexDocument(bibIdByDate,docPerThread, numberOfThreads);
-        return this.fullIndexStatus;
+        return this.partialIndexStatus;
 
     }
 
@@ -186,11 +198,13 @@ public class MainController {
             fullIndexRequest = new FullIndexRequest();
         }
 
-        if(null == fullIndexRequest.getDocsPerThread() || fullIndexRequest.getDocsPerThread() <= 0) {
+        Integer docsPerThread = fullIndexRequest.getDocsPerThread();
+        if(null == docsPerThread || docsPerThread <= 0) {
             fullIndexRequest.setDocsPerThread(Integer.valueOf(docPerThread));
         }
 
-        if(null == fullIndexRequest.getNoOfDbThreads() || fullIndexRequest.getNoOfDbThreads() <= 0) {
+        Integer noOfDbThreads = fullIndexRequest.getNoOfDbThreads();
+        if(null == noOfDbThreads || noOfDbThreads <= 0) {
             fullIndexRequest.setNoOfDbThreads(Integer.valueOf(noOfDbThread));
         }
 
@@ -240,6 +254,13 @@ public class MainController {
     @RequestMapping(value="/fullIndexStatus", method = RequestMethod.GET, produces = "application/json")
     public FullIndexStatus fullIndexStatus() {
         return this.fullIndexStatus;
+    }
+
+
+    @ResponseBody
+    @RequestMapping(value="/partialIndexStatus", method = RequestMethod.GET, produces = "application/json")
+    public PartialIndexStatus partialIndexStatus() {
+        return this.partialIndexStatus;
     }
 
     private void addObjectToJsonObject(JSONObject response, String key, String value) {

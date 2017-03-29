@@ -16,6 +16,8 @@ public class IndexStatus {
     private int numberOfItemsFetched;
     private int numberOfItemsProcessed;
     private boolean running;
+    private Integer noOfDbThreads;
+    private Integer docsPerThread;
 
     public String getStatus() {
         if(running) {
@@ -103,6 +105,22 @@ public class IndexStatus {
 
     public void setNumberOfItemsProcessed(int numberOfItemsProcessed) {
         this.numberOfItemsProcessed = numberOfItemsProcessed;
+    }
+
+    public Integer getNoOfDbThreads() {
+        return noOfDbThreads;
+    }
+
+    public void setNoOfDbThreads(Integer noOfDbThreads) {
+        this.noOfDbThreads = noOfDbThreads;
+    }
+
+    public Integer getDocsPerThread() {
+        return docsPerThread;
+    }
+
+    public void setDocsPerThread(Integer docsPerThread) {
+        this.docsPerThread = docsPerThread;
     }
 
     public void addBibFetched(int size) {

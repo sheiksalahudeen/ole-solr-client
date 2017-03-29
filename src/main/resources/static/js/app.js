@@ -37,9 +37,13 @@ angular.module("oleSolrClient", [
 var OLESOLRCLIENT_CONSTANTS = {
 	SIGNIN : "signin",
 	FULL_INDEX: "fullIndex",
+	PARTIAL_INDEX_BIB_ID: "partialIndexByBibIdRange",
+	PARTIAL_INDEX_FILE: "partialIndexByFile",
+	PARTIAL_INDEX_DATE: "partialIndexByDate",
 	GENERATE_REPORT: "generateReport",
 	GET_REPORT_FILES: "getReportsFiles",
     DOWNLOAD_REPORT_FILE: "downloadReportFile",
 	FULL_INDEX_STATUS : "fullIndexStatus",
+	PARTIAL_INDEX_STATUS : "partialIndexStatus",
 	ROL_ADMINISTRATOR : "ROL_ADMINISTRATOR"
 }

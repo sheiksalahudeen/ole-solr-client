@@ -29,7 +29,7 @@ public class HelperUtil {
     public static List<Integer> getListFromJSONArray(String content){
         List ops = new ArrayList();
         try {
-            ops = new ObjectMapper().readValue(content, new TypeReference<List<ArrayList>>() {
+            ops = new ObjectMapper().readValue(content, new TypeReference<List<Integer>>() {
             });
         } catch (IOException e) {
             e.printStackTrace();
